@@ -57,4 +57,4 @@ jobs:
             docker pull chidi150c/sqlite3webapp:${{ github.sha }}
 
             # Run a new container from the image, mapping host port 35261 to container port 35261
-            docker run -d -p 35261:35261 --name sqlite3webapp chidi150c/sqlite3webapp:${{ github.sha }}
+            docker run -d -p 35261:35261 --name sqlite3webapp --restart=always --network my-network  chidi150c/sqlite3webapp:${{ github.sha }}
