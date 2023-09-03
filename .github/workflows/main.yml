@@ -13,44 +13,48 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up sqlite
+      - name: Set up SQLite
+        run: |
+          # Create an SQLite database file
+          sqlite3 mydb.sqlite
+
+          # Run any necessary SQL commands to set up your database schema
+          sqlite3 mydb.sqlite < schema.sql
+
+          # You can also populate the database with initial data
+          sqlite3 mydb.sqlite < initial_data.sql
 
       - name: Docker Login
         run: |
-          docker logout
+          # Log in to Docker Hub using your Docker Hub credentials
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: ./webapp
+          context: ./webapp  # Specify the directory containing your Dockerfile and app code
           push: true
-          tags: chidi150c/node20webapp:${{ github.sha }}
-           
+          tags: chidi150c/sqlite3webapp:${{ github.sha }}  # Tag the Docker image with the GitHub SHA
+
       - name: Deploy to DigitalOcean
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.DROPLET_IP }}
-          username: ${{ secrets.DROPLET_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          host: ${{ secrets.DROPLET_IP }}  # DigitalOcean Droplet IP address
+          username: ${{ secrets.DROPLET_USERNAME }}  # SSH username for the Droplet
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH private key for authentication
+          port: ${{ secrets.SSH_PORT }}  # SSH port for the Droplet
           key_type: rsa
           script: |
-            docker logout
+            # Log in to Docker Hub again (not strictly necessary if already logged in)
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            docker stop $(docker ps -q -f name=node20webap) || true
-            docker rm $(docker ps -aq -f name=node20webap) || true
-            docker rmi $(docker images -q chidi150c/node20webapp) || true
-            docker pull chidi150c/node20webapp:${{ github.sha }}
-            docker run -d -p 3000:3000 --name node20webap chidi150c/node20webapp:${{ github.sha }}
-                      
-      - name: Restart web server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DROPLET_IP }}
-          username: ${{ secrets.DROPLET_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          key_type: rsa
-          script: |
-            sudo systemctl restart nginx
+
+            # Stop and remove existing containers and images (if any)
+            docker stop sqlite3webapp || true
+            docker rm sqlite3webapp || true
+            docker rmi chidi150c/sqlite3webapp:${{ github.sha }} || true
+
+            # Pull the newly built Docker image
+            docker pull chidi150c/sqlite3webapp:${{ github.sha }}
+
+            # Run a new container from the image, mapping host port 35261 to container port 35261
+            docker run -d -p 35261:35261 --name sqlite3webapp chidi150c/sqlite3webapp:${{ github.sha }}
