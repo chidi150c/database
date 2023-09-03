@@ -1,0 +1,56 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up sqlite
+
+      - name: Docker Login
+        run: |
+          docker logout
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./webapp
+          push: true
+          tags: chidi150c/node20webapp:${{ github.sha }}
+           
+      - name: Deploy to DigitalOcean
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          key_type: rsa
+          script: |
+            docker logout
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            docker stop $(docker ps -q -f name=node20webap) || true
+            docker rm $(docker ps -aq -f name=node20webap) || true
+            docker rmi $(docker images -q chidi150c/node20webapp) || true
+            docker pull chidi150c/node20webapp:${{ github.sha }}
+            docker run -d -p 3000:3000 --name node20webap chidi150c/node20webapp:${{ github.sha }}
+                      
+      - name: Restart web server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          key_type: rsa
+          script: |
+            sudo systemctl restart nginx
