@@ -5,7 +5,7 @@ FROM sqlite:latest
 WORKDIR /app
 
 # Copy your SQLite database file to the container (if needed)
-COPY sqlite.db /app
+COPY myapp.db /app
 
 # Specify a command to run when the container starts
-CMD ["sqlite3", "sqlite.db"]
+CMD ["sqlite3", "myapp.db"]
