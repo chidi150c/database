@@ -108,44 +108,80 @@ func (th *TradeHandler) UpdateAppData(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 func (th *TradeHandler) tradingSystemSocketHandler(w http.ResponseWriter, r *http.Request) {
-	// Upgrade the HTTP connection to a WebSocket connection
+    // Upgrade the HTTP connection to a WebSocket connection
 	conn, err := th.WebSocket.Upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		http.Error(w, "Could not upgrade to WebSocket", http.StatusBadRequest)
-		return
-	}
-	defer conn.Close()
+    if err != nil {
+        http.Error(w, "Could not upgrade to WebSocket", http.StatusBadRequest)
+        return
+    }
+    defer conn.Close()
 
 	// Create a channel to signal when the WebSocket connection is closed
 	closedChannel := make(chan struct{})
 
-	// Handle WebSocket close event
-	go func() {
-		for {
-			_, _, err := conn.ReadMessage()
-			if err != nil {
-				if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-					// WebSocket connection is closed
-					closedChannel <- struct{}{}
+    for {
+        messageType, p, err := conn.ReadMessage()
+        if err != nil {
+            log.Println("WebSocket read error:", err)
+            return
+        }
+
+        // Assuming p is the received message (a JSON string)
+
+        var request map[string]interface{}
+        if err := json.Unmarshal(p, &request); err != nil {
+            log.Println("Error parsing WebSocket message:", err)
+            continue
+        }
+
+        action, ok := request["action"].(string)
+        if !ok {
+            log.Println("Invalid action in WebSocket message")
+            continue
+        }
+
+        entity, ok := request["entity"].(string)
+        if !ok {
+            log.Println("Invalid entity in WebSocket message")
+            continue
+        }
+
+        data, ok := request["data"].(map[string]interface{})
+        if !ok {
+            log.Println("Invalid data in WebSocket message")
+            continue
+        }
+
+        // Handle different actions and entities here
+        if action == "create" {
+            if entity == "trading-system" {
+                // Handle create trading system
+                // You can access data["field1"], data["field2"], etc.
+				// Fetch the trading system from the database based on tradeID and AppDataID
+				ts := &model.TradingSystem{
+					Symbol: data["field1"].(string),
+					ClosingPrices: data["field2"].([]float64),
+				}
+				tradeID, _, err := th.DBServices.Create(ts, nil)
+				if err != nil {
+					log.Println("Error fetching trading system:", err)
 					return
 				}
-				log.Println("WebSocket read error:", err)
+
+			// Send the trading system data to the client via the conn
+			err = conn.WriteJSON(trade)
+			if err != nil {
+				log.Println("Error sending trading system data via WebSocket:", err)
 				return
 			}
-		}
-	}()
-
-	// Periodically fetch and send TradingSystem records to the client
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	go func() {
-		// You can fetch the tradeID and AppDataID from the user or HTTP request
-		tradeID := "your_trade_id"
-		AppDataID := "your_appdata_id"
-
-		for {
-			// Fetch the trading system from the database based on tradeID and AppDataID
+                // Perform database operations and send response back to client
+            } else if entity == "app-data" {
+                // Handle create app data
+                // You can access data["field1"], data["field2"], etc.
+                // Perform database operations and send response back to client
+            }
+        } else if action == "retrieve" {
+            // Fetch the trading system from the database based on tradeID and AppDataID
 			trade, _, err := th.DBServices.Read(tradeID, AppDataID)
 			if err != nil {
 				log.Println("Error fetching trading system:", err)
@@ -158,11 +194,11 @@ func (th *TradeHandler) tradingSystemSocketHandler(w http.ResponseWriter, r *htt
 				log.Println("Error sending trading system data via WebSocket:", err)
 				return
 			}
-			// Sleep for a while (you can adjust the duration)
-			time.Sleep(5 * time.Second)
-		}
-	}()
+        } else {
+            log.Println("Invalid action in WebSocket message")
+        }
 
-	// Block until the WebSocket connection is closed
-	<-closedChannel
+        // Send responses back to the client as needed
+    }
 }
+
