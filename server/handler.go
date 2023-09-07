@@ -158,9 +158,9 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
                     return
                 }
             }
-        } else if action == "retrieve" {
-            // Handle retrieve operation
-            // You can access data["trade_id"] or data["data_id"] to retrieve data from the database
+        } else if action == "read" {
+            // Handle read operation
+            // You can access data["trade_id"] or data["data_id"] to read data from the database
 
             // Fetch the trading system or app data based on tradeID or dataID
             if entity == "trading-system" {
@@ -196,7 +196,123 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
                     return
                 }
             }
-        } else {
+        } else if action == "update" {
+			// Handle update operation
+			// You can access data["trade_id"] or data["data_id"] to identify the record to update
+		
+			if entity == "trading-system" {
+				tradeID := data["trade_id"].(int)
+		
+				// Fetch the existing trading system from the database based on tradeID
+				existingTrade, err := th.DBServices.ReadTradingSystem(tradeID)
+				if err != nil {
+					log.Println("Error retrieving trading system for update:", err)
+					return
+				}
+		
+				// Update the existing trading system fields with new data
+				existingTrade.Symbol = data["Symbol"].(string)
+				existingTrade.ClosingPrices = data["ClosingPrices"].([]float64)
+				// Update other fields as needed
+		
+				// Save the updated trading system back to the database
+				err = th.DBServices.UpdateTradingSystem(existingTrade)
+				if err != nil {
+					log.Println("Error updating trading system:", err)
+					return
+				}
+		
+				// Send a success response back to the client via the conn
+				response := map[string]interface{}{
+					"message": "Trading system updated successfully",
+				}
+		
+				err = conn.WriteJSON(response)
+				if err != nil {
+					log.Println("Error sending response via WebSocket:", err)
+					return
+				}
+			} else if entity == "app-data" {
+				dataID := data["data_id"].(int)
+		
+				// Fetch the existing app data from the database based on dataID
+				existingAppData, err := th.DBServices.ReadAppData(dataID)
+				if err != nil {
+					log.Println("Error retrieving app data for update:", err)
+					return
+				}
+		
+				// Update the existing app data fields with new data
+				existingAppData.DataPoint = data["DataPoint"].(int)
+				existingAppData.Strategy = data["Strategy"].(string)
+				existingAppData.ShortPeriod = data["ShortPeriod"].(int)
+				existingAppData.LongPeriod = data["LongPeriod"].(int)
+				// Update other fields as needed
+		
+				// Save the updated app data back to the database
+				err = th.DBServices.UpdateAppData(existingAppData)
+				if err != nil {
+					log.Println("Error updating app data:", err)
+					return
+				}
+		
+				// Send a success response back to the client via the conn
+				response := map[string]interface{}{
+					"message": "App data updated successfully",
+				}
+		
+				err = conn.WriteJSON(response)
+				if err != nil {
+					log.Println("Error sending response via WebSocket:", err)
+					return
+				}
+			}
+		} else if action == "delete" {
+			// Handle delete operation
+			// You can access data["trade_id"] or data["data_id"] to identify the record to delete
+		
+			if entity == "trading-system" {
+				tradeID := data["trade_id"].(int)
+		
+				// Delete the trading system from the database based on tradeID
+				err := th.DBServices.DeleteTradingSystem(tradeID)
+				if err != nil {
+					log.Println("Error deleting trading system:", err)
+					return
+				}
+		
+				// Send a success response back to the client via the conn
+				response := map[string]interface{}{
+					"message": "Trading system deleted successfully",
+				}
+		
+				err = conn.WriteJSON(response)
+				if err != nil {
+					log.Println("Error sending response via WebSocket:", err)
+					return
+				}
+			} else if entity == "app-data" {
+				dataID := data["data_id"].(int)
+		
+				// Delete the app data from the database based on dataID
+				err := th.DBServices.DeleteAppData(dataID)
+				if err != nil {
+					log.Println("Error deleting app data:", err)
+					return
+				}
+		
+				// Send a success response back to the client via the conn
+				response := map[string]interface{}{
+					"message": "App data deleted successfully",
+				}
+		
+				err = conn.WriteJSON(response)
+				if err != nil {
+					log.Println("Error sending response via WebSocket:", err)
+					return
+				}
+			}
+		} else {
             log.Println("Invalid action in WebSocket message")
         }
     }
