@@ -6,10 +6,17 @@ import (
 	"net/http"
 
 	"github.com/chidi150c/database/gorm"
+	"github.com/chidi150c/database/helper"
 	"github.com/chidi150c/database/model"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"
 )
+// Define a struct that matches the expected WebSocket message format
+type WebSocketMessage struct {
+    Action string                 `json:"action"`
+    Entity string                 `json:"entity"`
+    Data   map[string]interface{} `json:"data"`
+}
 
 // WebService is a user login-aware wrapper for a html/template.
 type WebSocketService struct {	
@@ -69,134 +76,124 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
             return
         }
 
-        // Assuming p is the received message (a JSON string)
+        // Assuming p is the received message (in JSON)
 
-        var request map[string]interface{}
-        if err := json.Unmarshal(p, &request); err != nil {
-            log.Println("Error parsing WebSocket message:", err)
-            continue
-        }
+        // Unmarshal the WebSocket message (p) into a WebSocketMessage struct
+		var message WebSocketMessage
+		if err := json.Unmarshal(p, &message); err != nil {
+			log.Println("Error parsing WebSocket message:", err)
+			continue
+		}
 
-        action, ok := request["action"].(string)
-        if !ok {
-            log.Println("Invalid action in WebSocket message")
-            continue
-        }
+		action := message.Action
+		entity := message.Entity
+		data := message.Data
 
-        entity, ok := request["entity"].(string)
-        if !ok {
-            log.Println("Invalid entity in WebSocket message")
-            continue
-        }
+		// Handle different actions and entities here
+		if action == "create" {
+			if entity == "trading-system" {
+				// Handle create trading system
+				// Access data["Symbol"] and data["ClosingPrices"] directly
+				closingPrices, err := helper.ConvertToFloat64Slice(data["ClosingPrices"])
+				if err != nil {
+					log.Println("Error converting ClosingPrices:", err)
+					continue
+				}
 
-        data, ok := request["data"].(map[string]interface{})
-        if !ok {
-            log.Println("Invalid data in WebSocket message")
-            continue
-        }
+				ts := &model.TradingSystem{
+					Symbol:        data["Symbol"].(string),
+					ClosingPrices: closingPrices,
+					// Add other fields as needed
+				}
 
-        // Handle different actions and entities here
-        if action == "create" {
-            if entity == "trading-system" {
-                // Handle create trading system
-                // You can access data["field1"], data["field2"], etc.
+				// Insert the new trading system into the database
+				tradeID, err := th.DBServices.CreateTradingSystem(ts)
+				if err != nil {
+					log.Println("Error creating trading system:", err)
+					return
+				}
 
-                // Create a new TradingSystem object with the provided data
-                ts := &model.TradingSystem{
-                    Symbol:        data["Symbol"].(string),
-                    ClosingPrices: data["ClosingPrices"].([]float64),
-                    // Add other fields as needed
-                }
+				// Send the tradeID back to the client via the conn
+				response := map[string]interface{}{
+					"trade_id": tradeID,
+				}
 
-                // Insert the new trading system into the database
-                tradeID, err := th.DBServices.CreateTradingSystem(ts)
-                if err != nil {
-                    log.Println("Error creating trading system:", err)
-                    return
-                }
+				err = conn.WriteJSON(response)
+				if err != nil {
+					log.Println("Error sending response via WebSocket:", err)
+					return
+				}
+			} else if entity == "app-data" {
+				// Handle create app data
+				// Access data["DataPoint"], data["Strategy"], etc. directly
 
-                // Send the tradeID back to the client via the conn
-                response := map[string]interface{}{
-                    "trade_id": tradeID,
-                }
+				appData := &model.AppData{
+					DataPoint:      int(data["DataPoint"].(float64)),
+					Strategy:       data["Strategy"].(string),
+					ShortPeriod:    int(data["ShortPeriod"].(float64)),
+					LongPeriod:     int(data["LongPeriod"].(float64)),
+					ShortEMA:       data["ShortEMA"].(float64),
+					LongEMA:        data["LongEMA"].(float64),
+					// Add other fields as needed
+				}
 
-                err = conn.WriteJSON(response)
-                if err != nil {
-                    log.Println("Error sending response via WebSocket:", err)
-                    return
-                }
-            } else if entity == "app-data" {
-                // Handle create app data
-                // You can access data["field1"], data["field2"], etc.
+				// Insert the new app data into the database
+				dataID, err := th.DBServices.CreateAppData(appData)
+				if err != nil {
+					log.Println("Error creating app data:", err)
+					return
+				}
 
-                // Create a new AppData object with the provided data
-                appData := &model.AppData{
-                    DataPoint:      data["DataPoint"].(int),
-                    Strategy:       data["Strategy"].(string),
-                    ShortPeriod:    data["ShortPeriod"].(int),
-                    LongPeriod:     data["LongPeriod"].(int),
-                    ShortEMA:       data["ShortEMA"].(float64),
-                    LongEMA:        data["LongEMA"].(float64),
-                    // Add other fields as needed
-                }
+				// Send the dataID back to the client via the conn
+				response := map[string]interface{}{
+					"data_id": dataID,
+				}
 
-                // Insert the new app data into the database
-                dataID, err := th.DBServices.CreateAppData(appData)
-                if err != nil {
-                    log.Println("Error creating app data:", err)
-                    return
-                }
+				err = conn.WriteJSON(response)
+				if err != nil {
+					log.Println("Error sending response via WebSocket:", err)
+					return
+				}
+			}
+		} else if action == "read" {
+			// Handle read operation
+			// Access data["trade_id"] or data["data_id"] directly
 
-                // Send the dataID back to the client via the conn
-                response := map[string]interface{}{
-                    "data_id": dataID,
-                }
+			// Fetch the trading system or app data based on tradeID or dataID
+			if entity == "trading-system" {
+				tradeID := int(data["trade_id"].(float64))
 
-                err = conn.WriteJSON(response)
-                if err != nil {
-                    log.Println("Error sending response via WebSocket:", err)
-                    return
-                }
-            }
-        } else if action == "read" {
-            // Handle read operation
-            // You can access data["trade_id"] or data["data_id"] to read data from the database
+				// Fetch the trading system from the database based on tradeID
+				trade, err := th.DBServices.ReadTradingSystem(tradeID)
+				if err != nil {
+					log.Println("Error retrieving trading system:", err)
+					return
+				}
 
-            // Fetch the trading system or app data based on tradeID or dataID
-            if entity == "trading-system" {
-                tradeID := data["trade_id"].(int)
+				// Send the trading system data to the client via the conn
+				err = conn.WriteJSON(trade)
+				if err != nil {
+					log.Println("Error sending trading system data via WebSocket:", err)
+					return
+				}
+			} else if entity == "app-data" {
+				dataID := int(data["data_id"].(float64))
 
-                // Fetch the trading system from the database based on tradeID
-                trade, err := th.DBServices.ReadTradingSystem(tradeID)
-                if err != nil {
-                    log.Println("Error retrieving trading system:", err)
-                    return
-                }
+				// Fetch the app data from the database based on dataID
+				appData, err := th.DBServices.ReadAppData(dataID)
+				if err != nil {
+					log.Println("Error retrieving app data:", err)
+					return
+				}
 
-                // Send the trading system data to the client via the conn
-                err = conn.WriteJSON(trade)
-                if err != nil {
-                    log.Println("Error sending trading system data via WebSocket:", err)
-                    return
-                }
-            } else if entity == "app-data" {
-                dataID := data["data_id"].(int)
-
-                // Fetch the app data from the database based on dataID
-                appData, err := th.DBServices.ReadAppData(dataID)
-                if err != nil {
-                    log.Println("Error retrieving app data:", err)
-                    return
-                }
-
-                // Send the app data to the client via the conn
-                err = conn.WriteJSON(appData)
-                if err != nil {
-                    log.Println("Error sending app data via WebSocket:", err)
-                    return
-                }
-            }
-        } else if action == "update" {
+				// Send the app data to the client via the conn
+				err = conn.WriteJSON(appData)
+				if err != nil {
+					log.Println("Error sending app data via WebSocket:", err)
+					return
+				}
+			}
+		} else if action == "update" {
 			// Handle update operation
 			// You can access data["trade_id"] or data["data_id"] to identify the record to update
 		
@@ -313,9 +310,9 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 				}
 			}
 		} else {
-            log.Println("Invalid action in WebSocket message")
-        }
-    }
+			log.Println("Invalid action in WebSocket message")
+		}
+	}
 }
 
 

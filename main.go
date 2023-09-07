@@ -6,7 +6,6 @@ import (
 
 	"github.com/chidi150c/database/gorm"
 	"github.com/chidi150c/database/server"
-    "github.com/chidi150c/database/webclient"
 )
 
 func main() {
