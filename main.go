@@ -21,8 +21,14 @@ func main() {
 		log.Fatalf("Failed to initialize DBServices: %v", err)
 	}
 
+	// Check if the required tables (TradingSystem and AppData) exist in the database.
+	// If they don't exist, create them.
+	if err := dbs.CheckAndCreateTables(); err != nil {
+		log.Fatalf("Error creating database tables: %v", err)
+	}
+
 	// Initialize your WebSocket service
-	webSocketService := webclient.NewWebSocketService(dbs)
+	webSocketService := server.NewWebSocketService(hostSite) 
 
 	// Initialize your TradeHandler
 	th := server.NewTradeHandler(dbs, webSocketService, hostSite)

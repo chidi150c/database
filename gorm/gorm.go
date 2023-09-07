@@ -2,7 +2,6 @@ package gorm
 
 import (
 	"fmt"
-	"log"
 
     "github.com/chidi150c/database/model"
 	"github.com/jinzhu/gorm"
