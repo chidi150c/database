@@ -30,9 +30,7 @@ jobs:
           script: |
             set -e
             echo "Removing old deployment..."
-            # Disable strict host key checking
-            ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} "cd /tmp/my-app && rm -rf *"
-
+            ssh ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} "cd /tmp/my-app && rm -rf *"
 
       - name: Copy Application Files to Target System
         uses: appleboy/scp-action@master
