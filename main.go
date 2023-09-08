@@ -32,7 +32,7 @@ func main() {
 	webSocketService := server.NewWebSocketService(hostSite) 
 
 	// Initialize your TradeHandler
-	th := server.NewTradeHandler(dbs, webSocketService, hostSite)
+	th := server.NewTradeHandler(dbs, webSocketService)
 
 	// Setup and Start Web Server
 	server := server.NewServer(port, th)

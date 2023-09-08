@@ -1,30 +1,33 @@
-# Use an official Golang runtime as a parent image
+# Use the desired Go version
 FROM golang:1.16 AS builder
 
-# Set the working directory to /app
+# Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
+# Copy the entire project into the container
 COPY . .
 
-# Build the Go application
-RUN go build -o myapp
+# Clean the Go build cache
+RUN go clean -cache
 
-# Start with a fresh Alpine Linux image
+# Build the Go application with explicit flags
+RUN CGO_ENABLED=1 GOARCH=amd64 go build -o myapp
+
+# Use a minimal base image for the final container
 FROM alpine:latest
 
-# Set the working directory to /app
+# Set the working directory in the final container
 WORKDIR /app
 
-# Copy the compiled binary from the builder image
-COPY --from=builder /app/myapp /app/myapp
+# Copy the built binary from the builder stage
+COPY --from=builder /app/myapp .
 
-# Expose the port your application will run on
+# Expose the port your Go application listens on (e.g., 8080)
 EXPOSE 8080
 
 # Define environment variables (if needed)
-# ENV PORT4=8080
-# ENV HOSTSITE=myhostsite
+ENV PORT3=8080
+ENV HOSTSITE=https://resoledge.com
 
-# Run your application
+# Run your Go application
 CMD ["./myapp"]

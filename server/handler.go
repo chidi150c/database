@@ -45,7 +45,7 @@ type TradeHandler struct {
     DBServices *gorm.DBServices
 }
 
-func NewTradeHandler(dBServices *gorm.DBServices, webSocketService WebSocketService, HostSite string) TradeHandler {
+func NewTradeHandler(dBServices *gorm.DBServices, webSocketService WebSocketService) TradeHandler {
     h := TradeHandler{
         mux:        chi.NewRouter(),
 		WebSocket:  webSocketService,
