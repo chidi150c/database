@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/chidi150c/database/gorm"
-	"github.com/chidi150c/database/helper"
 	"github.com/chidi150c/database/model"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"
@@ -79,66 +78,53 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
         // Assuming p is the received message (in JSON)
 
         // Unmarshal the WebSocket message (p) into a WebSocketMessage struct
-		var message WebSocketMessage
-		if err := json.Unmarshal(p, &message); err != nil {
-			log.Println("Error parsing WebSocket message:", err)
-			continue
-		}
+        var message WebSocketMessage
+        if err := json.Unmarshal(p, &message); err != nil {
+            log.Println("Error parsing WebSocket message:", err)
+            continue
+        }
 
-		action := message.Action
-		entity := message.Entity
-		data := message.Data
+        action := message.Action
+        entity := message.Entity
+        data := message.Data
 
-		// Handle different actions and entities here
-		if action == "create" {
-			if entity == "trading-system" {
-				// Handle create trading system
-				// Access data["Symbol"] and data["ClosingPrices"] directly
-				closingPrices, err := helper.ConvertToFloat64Slice(data["ClosingPrices"])
-				if err != nil {
-					log.Println("Error converting ClosingPrices:", err)
+        // Handle different actions and entities here
+        if action == "create" {
+            if entity == "trading-system" {
+                var ts model.TradingSystem				
+				dataByte, _ := json.Marshal(data)
+				// Deserialize the WebSocket message directly into the struct
+				if err := json.Unmarshal(dataByte, &ts); err != nil {
+					log.Println("Error parsing WebSocket message:", err)
 					continue
 				}
-
-				ts := &model.TradingSystem{
-					Symbol:        data["Symbol"].(string),
-					ClosingPrices: closingPrices,
-					// Add other fields as needed
-				}
-
 				// Insert the new trading system into the database
-				tradeID, err := th.DBServices.CreateTradingSystem(ts)
+				tradeID, err := th.DBServices.CreateTradingSystem(&ts)
 				if err != nil {
 					log.Println("Error creating trading system:", err)
-					return
+					continue
 				}
-
 				// Send the tradeID back to the client via the conn
 				response := map[string]interface{}{
-					"trade_id": tradeID,
+					"data_id": tradeID,
 				}
-
 				err = conn.WriteJSON(response)
 				if err != nil {
 					log.Println("Error sending response via WebSocket:", err)
-					return
-				}
+					continue
+				}	
+				
 			} else if entity == "app-data" {
-				// Handle create app data
-				// Access data["DataPoint"], data["Strategy"], etc. directly
-
-				appData := &model.AppData{
-					DataPoint:      int(data["DataPoint"].(float64)),
-					Strategy:       data["Strategy"].(string),
-					ShortPeriod:    int(data["ShortPeriod"].(float64)),
-					LongPeriod:     int(data["LongPeriod"].(float64)),
-					ShortEMA:       data["ShortEMA"].(float64),
-					LongEMA:        data["LongEMA"].(float64),
-					// Add other fields as needed
+                var appData model.AppData
+				dataByte, _ := json.Marshal(data)
+				// Deserialize the WebSocket message directly into the struct
+				if err := json.Unmarshal(dataByte, &appData); err != nil {
+					log.Println("Error parsing WebSocket message:", err)
+					continue
 				}
 
 				// Insert the new app data into the database
-				dataID, err := th.DBServices.CreateAppData(appData)
+				dataID, err := th.DBServices.CreateAppData(&appData)
 				if err != nil {
 					log.Println("Error creating app data:", err)
 					return
@@ -154,30 +140,26 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 					log.Println("Error sending response via WebSocket:", err)
 					return
 				}
-			}
-		} else if action == "read" {
-			// Handle read operation
-			// Access data["trade_id"] or data["data_id"] directly
+            }
+        } else if action == "read" {
+            if entity == "trading-system" {
+                tradeID := uint(data["data_id"].(float64))
 
-			// Fetch the trading system or app data based on tradeID or dataID
-			if entity == "trading-system" {
-				tradeID := int(data["trade_id"].(float64))
+                // Fetch the trading system from the database based on tradeID
+                trade, err := th.DBServices.ReadTradingSystem(tradeID)
+                if err != nil {
+                    log.Println("Error retrieving trading system:", err)
+                    return
+                }
 
-				// Fetch the trading system from the database based on tradeID
-				trade, err := th.DBServices.ReadTradingSystem(tradeID)
-				if err != nil {
-					log.Println("Error retrieving trading system:", err)
-					return
-				}
-
-				// Send the trading system data to the client via the conn
-				err = conn.WriteJSON(trade)
-				if err != nil {
-					log.Println("Error sending trading system data via WebSocket:", err)
-					return
-				}
-			} else if entity == "app-data" {
-				dataID := int(data["data_id"].(float64))
+                // Send the trading system data to the client via the conn
+                err = conn.WriteJSON(trade)
+                if err != nil {
+                    log.Println("Error sending trading system data via WebSocket:", err)
+                    return
+                }
+            } else if entity == "app-data" {
+				dataID := uint(data["data_id"].(float64))
 
 				// Fetch the app data from the database based on dataID
 				appData, err := th.DBServices.ReadAppData(dataID)
@@ -192,58 +174,106 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 					log.Println("Error sending app data via WebSocket:", err)
 					return
 				}
-			}
-		} else if action == "update" {
-			// Handle update operation
-			// You can access data["trade_id"] or data["data_id"] to identify the record to update
-		
-			if entity == "trading-system" {
-				tradeID := data["trade_id"].(int)
-		
-				// Fetch the existing trading system from the database based on tradeID
-				existingTrade, err := th.DBServices.ReadTradingSystem(tradeID)
-				if err != nil {
-					log.Println("Error retrieving trading system for update:", err)
-					return
+            }
+        } else if action == "update" {
+            if entity == "trading-system" {
+                var ts model.TradingSystem				
+				dataByte, _ := json.Marshal(data)
+				// Deserialize the WebSocket message directly into the struct
+				if err := json.Unmarshal(dataByte, &ts); err != nil {
+					log.Println("Error parsing WebSocket message:", err)
+					continue
 				}
-		
-				// Update the existing trading system fields with new data
-				existingTrade.Symbol = data["Symbol"].(string)
-				existingTrade.ClosingPrices = data["ClosingPrices"].([]float64)
-				// Update other fields as needed
-		
-				// Save the updated trading system back to the database
-				err = th.DBServices.UpdateTradingSystem(existingTrade)
-				if err != nil {
-					log.Println("Error updating trading system:", err)
-					return
+
+                // Fetch the existing trading system from the database based on tradeID
+                existingTrade, err := th.DBServices.ReadTradingSystem(ts.ID)
+                if err != nil {
+                    log.Println("Error retrieving trading system for update:", err)
+                    return
+                }
+                // Update the existing trading system fields with new data
+                existingTrade.Symbol = ts.Symbol
+				existingTrade.ClosingPrices = ts.ClosingPrices
+				// existingTrade.Container1 = ts.Container1 // Example
+				// existingTrade.Container2 = ts.Container2 // Example
+				// existingTrade.Timestamps = ts.Timestamps"].(model.Int64Slice)   // Example
+				// existingTrade.Signals = ts.Signals"].(model.StringSlice)        // Example
+				// existingTrade.NextInvestBuYPrice = ts.NextInvestBuYPrice // Example
+				// existingTrade.NextProfitSeLLPrice = ts.NextProfitSeLLPrice // Example
+				// existingTrade.CommissionPercentage = ts.CommissionPercentage"].(float64)
+				// existingTrade.InitialCapital = ts.InitialCapital"].(float64)
+				// existingTrade.PositionSize = ts.PositionSize"].(float64)
+				// existingTrade.EntryPrice = ts.EntryPrice // Example
+				// existingTrade.InTrade = ts.InTrade"].(bool)
+				// existingTrade.QuoteBalance = ts.QuoteBalance"].(float64)
+				// existingTrade.BaseBalance = ts.BaseBalance"].(float64)
+				// existingTrade.RiskCost = ts.RiskCost"].(float64)
+				// existingTrade.DataPoint = int(ts.DataPoint"].(float64))
+				// existingTrade.CurrentPrice = ts.CurrentPrice"].(float64)
+				// existingTrade.EntryQuantity = ts.EntryQuantity // Example
+				// existingTrade.Scalping = ts.Scalping
+				// existingTrade.StrategyCombLogic = ts.StrategyCombLogic
+				// existingTrade.EntryCostLoss = ts.EntryCostLoss // Example
+				// existingTrade.TradeCount = int(ts.TradeCount"].(float64))
+				// existingTrade.EnableStoploss = ts.EnableStoploss"].(bool)
+				// existingTrade.StopLossTrigered = ts.StopLossTrigered"].(bool)
+				// existingTrade.StopLossRecover = ts.StopLossRecover // Example
+				// existingTrade.RiskFactor = ts.RiskFactor"].(float64)
+				// existingTrade.MaxDataSize = int(ts.MaxDataSize"].(float64))
+				// existingTrade.RiskProfitLossPercentage = ts.RiskProfitLossPercentage"].(float64)
+				// existingTrade.BaseCurrency = ts.BaseCurrency
+				// existingTrade.QuoteCurrency = ts.QuoteCurrency
+				// existingTrade.MiniQty = ts.MiniQty"].(float64)
+				// existingTrade.MaxQty = ts.MaxQty"].(float64)
+				// existingTrade.MinNotional = ts.MinNotional"].(float64)
+				// existingTrade.StepSize = ts.StepSize"].(float64)
+
+
+
+                // Save the updated trading system back to the database
+                err = th.DBServices.UpdateTradingSystem(existingTrade)
+                if err != nil {
+                    log.Println("Error updating trading system:", err)
+                    return
+                }
+
+                // Send a success response back to the client via the conn
+                response := map[string]interface{}{
+                    "message": "Trading system updated successfully",
+					"data_id": existingTrade.ID,
+                }
+
+                err = conn.WriteJSON(response)
+                if err != nil {
+                    log.Println("Error sending response via WebSocket:", err)
+                    return
+                }
+            } else if entity == "app-data" {
+                var ap model.AppData				
+				dataByte, _ := json.Marshal(data)
+				// Deserialize the WebSocket message directly into the struct
+				if err := json.Unmarshal(dataByte, &ap); err != nil {
+					log.Println("Error parsing WebSocket message:", err)
+					continue
 				}
-		
-				// Send a success response back to the client via the conn
-				response := map[string]interface{}{
-					"message": "Trading system updated successfully",
-				}
-		
-				err = conn.WriteJSON(response)
-				if err != nil {
-					log.Println("Error sending response via WebSocket:", err)
-					return
-				}
-			} else if entity == "app-data" {
-				dataID := data["data_id"].(int)
 		
 				// Fetch the existing app data from the database based on dataID
-				existingAppData, err := th.DBServices.ReadAppData(dataID)
+				existingAppData, err := th.DBServices.ReadAppData(ap.ID)
 				if err != nil {
 					log.Println("Error retrieving app data for update:", err)
 					return
 				}
 		
 				// Update the existing app data fields with new data
-				existingAppData.DataPoint = data["DataPoint"].(int)
+				existingAppData.DataPoint = int(data["DataPoint"].(float64))
 				existingAppData.Strategy = data["Strategy"].(string)
-				existingAppData.ShortPeriod = data["ShortPeriod"].(int)
-				existingAppData.LongPeriod = data["LongPeriod"].(int)
+				existingAppData.ShortPeriod = int(data["ShortPeriod"].(float64))
+				existingAppData.LongPeriod = int(data["LongPeriod"].(float64))
+				existingAppData.ShortEMA = data["ShortEMA"].(float64)
+				existingAppData.LongEMA = data["LongEMA"].(float64)
+				existingAppData.ProfitLoss    Float64Slice `gorm:"type:real[]"`
+				existingAppData.CapitalCurve  Float64Slice `gorm:"type:real[]"`
+				existingAppData.WinLossRatio  Float64Slice `gorm:"type:real[]"`
 				// Update other fields as needed
 		
 				// Save the updated app data back to the database
@@ -256,6 +286,7 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 				// Send a success response back to the client via the conn
 				response := map[string]interface{}{
 					"message": "App data updated successfully",
+					"data_id": existingAppData.ID,
 				}
 		
 				err = conn.WriteJSON(response)
@@ -263,36 +294,46 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 					log.Println("Error sending response via WebSocket:", err)
 					return
 				}
-			}
-		} else if action == "delete" {
-			// Handle delete operation
-			// You can access data["trade_id"] or data["data_id"] to identify the record to delete
-		
-			if entity == "trading-system" {
-				tradeID := data["trade_id"].(int)
-		
-				// Delete the trading system from the database based on tradeID
-				err := th.DBServices.DeleteTradingSystem(tradeID)
-				if err != nil {
-					log.Println("Error deleting trading system:", err)
-					return
+            }
+        } else if action == "delete" {
+            if entity == "trading-system" {
+                var ts model.AppData				
+				dataByte, _ := json.Marshal(data)
+				// Deserialize the WebSocket message directly into the struct
+				if err := json.Unmarshal(dataByte, &ts); err != nil {
+					log.Println("Error parsing WebSocket message:", err)
+					continue
 				}
-		
-				// Send a success response back to the client via the conn
-				response := map[string]interface{}{
-					"message": "Trading system deleted successfully",
+
+                // Delete the trading system from the database based on tradeID
+                err := th.DBServices.DeleteTradingSystem(ts.ID)
+                if err != nil {
+                    log.Println("Error deleting trading system:", err)
+                    return
+                }
+
+                // Send a success response back to the client via the conn
+                response := map[string]interface{}{
+                    "message": "Trading system deleted successfully",
+					"data_id": ts.ID,
+                }
+
+                err = conn.WriteJSON(response)
+                if err != nil {
+                    log.Println("Error sending response via WebSocket:", err)
+                    return
+                }
+            } else if entity == "app-data" {
+                var ap model.AppData				
+				dataByte, _ := json.Marshal(data)
+				// Deserialize the WebSocket message directly into the struct
+				if err := json.Unmarshal(dataByte, &ap); err != nil {
+					log.Println("Error parsing WebSocket message:", err)
+					continue
 				}
-		
-				err = conn.WriteJSON(response)
-				if err != nil {
-					log.Println("Error sending response via WebSocket:", err)
-					return
-				}
-			} else if entity == "app-data" {
-				dataID := data["data_id"].(int)
 		
 				// Delete the app data from the database based on dataID
-				err := th.DBServices.DeleteAppData(dataID)
+				err := th.DBServices.DeleteAppData(ap.ID)
 				if err != nil {
 					log.Println("Error deleting app data:", err)
 					return
@@ -301,6 +342,7 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 				// Send a success response back to the client via the conn
 				response := map[string]interface{}{
 					"message": "App data deleted successfully",
+					"data_id": ap.ID,
 				}
 		
 				err = conn.WriteJSON(response)
@@ -308,11 +350,9 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 					log.Println("Error sending response via WebSocket:", err)
 					return
 				}
-			}
-		} else {
-			log.Println("Invalid action in WebSocket message")
-		}
-	}
+            }
+        } else {
+            log.Println("Invalid action in WebSocket message")
+        }
+    }
 }
-
-
