@@ -59,7 +59,7 @@ jobs:
             docker stop my-database-app || true
             docker rm my-database-app || true
 
-            # Remove images with specific labels
+            # Remove images with specific labels 
             docker rmi my-database-app || true
 
             # Build and run Docker image with encapsulated environment
