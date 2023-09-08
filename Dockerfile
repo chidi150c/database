@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go application with explicit flags
-RUN go build -o myapp
+RUN go build -o mydbapp
 
 # Use a minimal base image for the final container
 FROM alpine:latest
@@ -23,7 +23,7 @@ FROM alpine:latest
 WORKDIR /app
 
 # Copy the built binary from the builder stage
-COPY --from=builder /app/myapp .
+COPY --from=builder /app/mydbapp .
 
 # Expose the port your Go application listens on (e.g., 8080)
 EXPOSE 8080
@@ -33,4 +33,4 @@ ENV PORT3=8080
 ENV HOSTSITE=https://resoledge.com
 
 # Run your Go application
-CMD ["./myapp"]
+CMD ["./mydbapp"]

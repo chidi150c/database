@@ -9,7 +9,7 @@ import (
 )
 
 // Define the maximum number of recent records to retain
-const maxRecentRecords = 1000  // Adjust this value as needed
+const maxRecentRecords = 500  // Adjust this value as needed
 
 // Function to enforce the retention policy
 func enforceRetentionPolicy(dbs *gorm.DBServices) error {
