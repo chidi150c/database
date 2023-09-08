@@ -1,4 +1,4 @@
-name: Deploy to DigitalOcean
+name: Go Build and Deploy
 
 on:
   push:
@@ -7,54 +7,60 @@ on:
 
 jobs:
   deploy:
+    name: Build Go Application and Deploy
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up SQLite
-        run: |
-          # Create an SQLite database file
-          sqlite3 mydb.sqlite
-
-          # Run any necessary SQL commands to set up your database schema
-          sqlite3 mydb.sqlite < schema.sql
-
-          # You can also populate the database with initial data
-          sqlite3 mydb.sqlite < initial_data.sql
-
-      - name: Docker Login
-        run: |
-          # Log in to Docker Hub using your Docker Hub credentials
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
         with:
-          context: ./webapp  # Specify the directory containing your Dockerfile and app code
-          push: true
-          tags: chidi150c/sqlite3webapp:${{ github.sha }}  # Tag the Docker image with the GitHub SHA
+          go-version: 1.20.0
 
-      - name: Deploy to DigitalOcean
+      - name: Remove Old Deployment in DigitalOcean 
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.DROPLET_IP }}  # DigitalOcean Droplet IP address
-          username: ${{ secrets.DROPLET_USERNAME }}  # SSH username for the Droplet
-          key: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH private key for authentication
-          port: ${{ secrets.SSH_PORT }}  # SSH port for the Droplet
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
           key_type: rsa
           script: |
-            # Log in to Docker Hub again (not strictly necessary if already logged in)
-            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            set -e
+            echo "Removing old deployment..."
+            ssh ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} "cd /tmp/my-app && rm -rf *"
 
-            # Stop and remove existing containers and images (if any)
-            docker stop sqlite3webapp || true
-            docker rm sqlite3webapp || true
-            docker rmi chidi150c/sqlite3webapp:${{ github.sha }} || true
+      - name: Copy Application Files to Target System
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: ./*
+          target: /tmp/my-app
 
-            # Pull the newly built Docker image
-            docker pull chidi150c/sqlite3webapp:${{ github.sha }}
+      - name: Build Docker Image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          key_type: rsa
+          script: |
+            set -e
+            cd /tmp/my-app
 
-            # Run a new container from the image, mapping host port 8080 to container port 8080
-            docker run -d -p 8080:8080 --name sqlite3webapp --restart=always --network my-network  chidi150c/sqlite3webapp:${{ github.sha }}
+            # Stop and remove containers with specific labels
+            docker stop my-database-app || true
+            docker rm my-database-app || true
+
+            # Remove images with specific labels
+            docker rmi my-database-app || true
+
+            # Build and run Docker image with encapsulated environment
+            docker build -t my-database-app .
+            docker run -d --name my-database-app --network my-network -p 8080:8080 my-database-app
