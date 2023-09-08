@@ -19,6 +19,11 @@ jobs:
         with:
           go-version: 1.20.0
 
+      - name: Add SSH key to SSH agent
+        run: |
+          eval $(ssh-agent -s)
+          ssh-add - <<<"${{ secrets.SSH_PRIVATE_KEY }}"
+
       - name: Remove Old Deployment in DigitalOcean 
         uses: appleboy/ssh-action@master
         with:
@@ -28,9 +33,9 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key_type: rsa
           script: |
-            set -e 
+            set -e
             echo "Removing old deployment..."
-            ssh ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} "cd /tmp/my-database && rm -rf *"
+            ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} "cd /tmp/my-database && rm -rf *"
 
       - name: Copy Application Files to Target System
         uses: appleboy/scp-action@master
@@ -39,7 +44,6 @@ jobs:
           username: ${{ secrets.DROPLET_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          key_type: rsa
           source: ./*
           target: /tmp/my-database
 
@@ -59,7 +63,7 @@ jobs:
             docker stop my-database-app || true
             docker rm my-database-app || true
 
-            # Remove images with specific labels 
+            # Remove images with specific labels
             docker rmi my-database-app || true
 
             # Build and run Docker image with encapsulated environment
