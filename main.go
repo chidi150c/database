@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// Get the port and host site from environment variables
-	port := os.Getenv("PORT4")
+	port := os.Getenv("PORT3")
 	hostSite := os.Getenv("HOSTSITE")
 
 	// Initialize your DBServices
@@ -25,7 +25,8 @@ func main() {
 	if err := dbs.CheckAndCreateTables(); err != nil {
 		log.Fatalf("Error creating database tables: %v", err)
 	}
-
+    // Start the scheduled retention task
+    go policy.ScheduleRetentionTask(dbs)
 	// Initialize your WebSocket service
 	webSocketService := server.NewWebSocketService(hostSite) 
 

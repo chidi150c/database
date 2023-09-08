@@ -27,6 +27,8 @@ func NewDBServices(dbName string) (*DBServices, error) {
 	return a, nil
 }
 
+var _ model.DBServicer = &DBServices{}
+
 func (a *DBServices) CheckAndCreateTables() error {
 	// Check if the TradingSystem table exists
 	tradingSystemTableExists := tableExists(a.DB, "trading_systems")
@@ -35,12 +37,14 @@ func (a *DBServices) CheckAndCreateTables() error {
 	appDataTableExists := tableExists(a.DB, "app_data")
 
 	// Start a new transaction
+
 	tx := a.DB.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
+
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		tx.Rollback()
+	// 	}
+	// }()
 
 	// Create tables conditionally
 	if !tradingSystemTableExists {
@@ -61,7 +65,7 @@ func (a *DBServices) CheckAndCreateTables() error {
 	if err := tx.Commit().Error; err != nil {
 		return fmt.Errorf("Error committing transaction: %v", err)
 	}
-
+	fmt.Printf("Everything is successful with your DataBase!")
 	return nil
 }
 
@@ -70,14 +74,14 @@ func tableExists(db *gorm.DB, tableName string) bool {
 	return db.HasTable(tableName)
 }
 
-func (s *DBServices) CreateTradingSystem(trade *model.TradingSystem) (int, error) {
+func (s *DBServices) CreateTradingSystem(trade *model.TradingSystem) (uint, error) {
     if err := s.DB.Create(trade).Error; err != nil {
         return 0, err
     }
     return trade.ID, nil
 }
 
-func (s *DBServices) ReadTradingSystem(tradeID int) (*model.TradingSystem, error) {
+func (s *DBServices) ReadTradingSystem(tradeID uint) (*model.TradingSystem, error) {
     var trade model.TradingSystem
     if err := s.DB.First(&trade, tradeID).Error; err != nil {
         return nil, err
@@ -92,21 +96,21 @@ func (s *DBServices) UpdateTradingSystem(trade *model.TradingSystem) error {
     return nil
 }
 
-func (s *DBServices) DeleteTradingSystem(tradeID int) error {
+func (s *DBServices) DeleteTradingSystem(tradeID uint) error {
     if err := s.DB.Delete(&model.TradingSystem{}, tradeID).Error; err != nil {
         return err
     }
     return nil
 }
 
-func (s *DBServices) CreateAppData(data *model.AppData) (int, error) {
+func (s *DBServices) CreateAppData(data *model.AppData) (uint, error) {
     if err := s.DB.Create(data).Error; err != nil {
         return 0, err
     }
     return data.ID, nil
 }
 
-func (s *DBServices) ReadAppData(dataID int) (*model.AppData, error) {
+func (s *DBServices) ReadAppData(dataID uint) (*model.AppData, error) {
     var data model.AppData
     if err := s.DB.First(&data, dataID).Error; err != nil {
         return nil, err
@@ -121,7 +125,7 @@ func (s *DBServices) UpdateAppData(data *model.AppData) error {
     return nil
 }
 
-func (s *DBServices) DeleteAppData(dataID int) error {
+func (s *DBServices) DeleteAppData(dataID uint) error {
     if err := s.DB.Delete(&model.AppData{}, dataID).Error; err != nil {
         return err
     }
