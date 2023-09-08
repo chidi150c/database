@@ -106,6 +106,7 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 				}
 				// Send the tradeID back to the client via the conn
 				response := map[string]interface{}{
+					"message": "TradingSystem created successfully",
 					"data_id": tradeID,
 				}
 				err = conn.WriteJSON(response)
@@ -132,7 +133,9 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 
 				// Send the dataID back to the client via the conn
 				response := map[string]interface{}{
+					"message": "AppData Created successfully",
 					"data_id": dataID,
+					"error": errMessage,
 				}
 
 				err = conn.WriteJSON(response)
@@ -143,33 +146,67 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
             }
         } else if action == "read" {
             if entity == "trading-system" {
-                tradeID := uint(data["data_id"].(float64))
-
+                var ts model.TradingSystem
+				dataByte, _ := json.Marshal(data)
+				// Deserialize the WebSocket message directly into the struct
+				if err := json.Unmarshal(dataByte, &ts); err != nil {
+					log.Println("Error parsing WebSocket message:", err)
+					continue
+				}
+                tradeID := ts.ID
                 // Fetch the trading system from the database based on tradeID
                 trade, err := th.DBServices.ReadTradingSystem(tradeID)
                 if err != nil {
                     log.Println("Error retrieving trading system:", err)
                     return
                 }
+				// Serialize the AppData object to JSON
+				appDataJSON, err := json.Marshal(trade)
+				if err != nil {
+					log.Println("Error marshaling TradingSystem to JSON:", err)
+					return
+				}
+				// Send the tradeID back to the client via the conn
+				response := map[string]interface{}{
+					"message": "TradingSystem Read successfully",
+					"data":   json.RawMessage(appDataJSON), // RawMessage to keep it as JSON
+				}
 
                 // Send the trading system data to the client via the conn
-                err = conn.WriteJSON(trade)
+                err = conn.WriteJSON(response)
                 if err != nil {
                     log.Println("Error sending trading system data via WebSocket:", err)
                     return
                 }
             } else if entity == "app-data" {
-				dataID := uint(data["data_id"].(float64))
+                var ap model.AppData
+				dataByte, _ := json.Marshal(data)
+				// Deserialize the WebSocket message directly into the struct
+				if err := json.Unmarshal(dataByte, &ap); err != nil {
+					log.Println("Error parsing WebSocket message:", err)
+					continue
+				}
+
 
 				// Fetch the app data from the database based on dataID
-				appData, err := th.DBServices.ReadAppData(dataID)
+				appData, err := th.DBServices.ReadAppData(ap.ID)
 				if err != nil {
 					log.Println("Error retrieving app data:", err)
 					return
 				}
-
+				// Serialize the AppData object to JSON
+				appDataJSON, err := json.Marshal(appData)
+				if err != nil {
+					log.Println("Error marshaling AppData to JSON:", err)
+					return
+				}
+				// Send the tradeID back to the client via the conn
+				response := map[string]interface{}{
+					"message": "TradingSystem Read successfully",
+					"data":   json.RawMessage(appDataJSON), // RawMessage to keep it as JSON
+				}
 				// Send the app data to the client via the conn
-				err = conn.WriteJSON(appData)
+				err = conn.WriteJSON(response)
 				if err != nil {
 					log.Println("Error sending app data via WebSocket:", err)
 					return

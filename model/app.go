@@ -10,7 +10,7 @@ type AppData struct {
 	LongPeriod             int
 	ShortEMA               float64
 	LongEMA                float64
-	TargetProfit           float64
+	TargetProfit           float64 
 	TargetStopLoss         float64
 	RiskPositionPercentage float64
 	TotalProfitLoss        float64
