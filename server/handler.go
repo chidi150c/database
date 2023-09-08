@@ -194,39 +194,39 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
                 // Update the existing trading system fields with new data
                 existingTrade.Symbol = ts.Symbol
 				existingTrade.ClosingPrices = ts.ClosingPrices
-				// existingTrade.Container1 = ts.Container1 // Example
-				// existingTrade.Container2 = ts.Container2 // Example
-				// existingTrade.Timestamps = ts.Timestamps"].(model.Int64Slice)   // Example
-				// existingTrade.Signals = ts.Signals"].(model.StringSlice)        // Example
-				// existingTrade.NextInvestBuYPrice = ts.NextInvestBuYPrice // Example
-				// existingTrade.NextProfitSeLLPrice = ts.NextProfitSeLLPrice // Example
-				// existingTrade.CommissionPercentage = ts.CommissionPercentage"].(float64)
-				// existingTrade.InitialCapital = ts.InitialCapital"].(float64)
-				// existingTrade.PositionSize = ts.PositionSize"].(float64)
-				// existingTrade.EntryPrice = ts.EntryPrice // Example
-				// existingTrade.InTrade = ts.InTrade"].(bool)
-				// existingTrade.QuoteBalance = ts.QuoteBalance"].(float64)
-				// existingTrade.BaseBalance = ts.BaseBalance"].(float64)
-				// existingTrade.RiskCost = ts.RiskCost"].(float64)
-				// existingTrade.DataPoint = int(ts.DataPoint"].(float64))
-				// existingTrade.CurrentPrice = ts.CurrentPrice"].(float64)
-				// existingTrade.EntryQuantity = ts.EntryQuantity // Example
-				// existingTrade.Scalping = ts.Scalping
-				// existingTrade.StrategyCombLogic = ts.StrategyCombLogic
-				// existingTrade.EntryCostLoss = ts.EntryCostLoss // Example
-				// existingTrade.TradeCount = int(ts.TradeCount"].(float64))
-				// existingTrade.EnableStoploss = ts.EnableStoploss"].(bool)
-				// existingTrade.StopLossTrigered = ts.StopLossTrigered"].(bool)
-				// existingTrade.StopLossRecover = ts.StopLossRecover // Example
-				// existingTrade.RiskFactor = ts.RiskFactor"].(float64)
-				// existingTrade.MaxDataSize = int(ts.MaxDataSize"].(float64))
-				// existingTrade.RiskProfitLossPercentage = ts.RiskProfitLossPercentage"].(float64)
-				// existingTrade.BaseCurrency = ts.BaseCurrency
-				// existingTrade.QuoteCurrency = ts.QuoteCurrency
-				// existingTrade.MiniQty = ts.MiniQty"].(float64)
-				// existingTrade.MaxQty = ts.MaxQty"].(float64)
-				// existingTrade.MinNotional = ts.MinNotional"].(float64)
-				// existingTrade.StepSize = ts.StepSize"].(float64)
+				existingTrade.Container1 = ts.Container1
+				existingTrade.Container2 = ts.Container2
+				existingTrade.Timestamps = ts.Timestamps   
+				existingTrade.Signals = ts.Signals       
+				existingTrade.NextInvestBuYPrice = ts.NextInvestBuYPrice
+				existingTrade.NextProfitSeLLPrice = ts.NextProfitSeLLPrice
+				existingTrade.CommissionPercentage = ts.CommissionPercentage
+				existingTrade.InitialCapital = ts.InitialCapital
+				existingTrade.PositionSize = ts.PositionSize
+				existingTrade.EntryPrice = ts.EntryPrice
+				existingTrade.InTrade = ts.InTrade
+				existingTrade.QuoteBalance = ts.QuoteBalance
+				existingTrade.BaseBalance = ts.BaseBalance
+				existingTrade.RiskCost = ts.RiskCost
+				existingTrade.DataPoint = ts.DataPoint
+				existingTrade.CurrentPrice = ts.CurrentPrice
+				existingTrade.EntryQuantity = ts.EntryQuantity
+				existingTrade.Scalping = ts.Scalping
+				existingTrade.StrategyCombLogic = ts.StrategyCombLogic
+				existingTrade.EntryCostLoss = ts.EntryCostLoss
+				existingTrade.TradeCount = ts.TradeCount
+				existingTrade.EnableStoploss = ts.EnableStoploss
+				existingTrade.StopLossTrigered = ts.StopLossTrigered
+				existingTrade.StopLossRecover = ts.StopLossRecover
+				existingTrade.RiskFactor = ts.RiskFactor
+				existingTrade.MaxDataSize = ts.MaxDataSize
+				existingTrade.RiskProfitLossPercentage = ts.RiskProfitLossPercentage
+				existingTrade.BaseCurrency = ts.BaseCurrency
+				existingTrade.QuoteCurrency = ts.QuoteCurrency
+				existingTrade.MiniQty = ts.MiniQty
+				existingTrade.MaxQty = ts.MaxQty
+				existingTrade.MinNotional = ts.MinNotional
+				existingTrade.StepSize = ts.StepSize
 
 
 
@@ -265,16 +265,16 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 				}
 		
 				// Update the existing app data fields with new data
-				existingAppData.DataPoint = int(data["DataPoint"].(float64))
-				existingAppData.Strategy = data["Strategy"].(string)
-				existingAppData.ShortPeriod = int(data["ShortPeriod"].(float64))
-				existingAppData.LongPeriod = int(data["LongPeriod"].(float64))
-				existingAppData.ShortEMA = data["ShortEMA"].(float64)
-				existingAppData.LongEMA = data["LongEMA"].(float64)
-				existingAppData.ProfitLoss    Float64Slice `gorm:"type:real[]"`
-				existingAppData.CapitalCurve  Float64Slice `gorm:"type:real[]"`
-				existingAppData.WinLossRatio  Float64Slice `gorm:"type:real[]"`
-				// Update other fields as needed
+				existingAppData.DataPoint = ap.DataPoint
+				existingAppData.Strategy = ap.Strategy
+				existingAppData.ShortPeriod = ap.ShortPeriod
+				existingAppData.LongPeriod = ap.LongPeriod
+				existingAppData.ShortEMA = ap.ShortEMA
+				existingAppData.LongEMA = ap.LongEMA
+				existingAppData.TargetProfit = ap.TargetProfit
+				existingAppData.TargetStopLoss = ap.TargetStopLoss
+				existingAppData.RiskPositionPercentage = ap.RiskPositionPercentage
+				existingAppData.TotalProfitLoss = ap.TotalProfitLoss
 		
 				// Save the updated app data back to the database
 				err = th.DBServices.UpdateAppData(existingAppData)
