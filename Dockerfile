@@ -16,9 +16,6 @@ COPY . .
 # Build the Go application with explicit flags
 RUN go build -o mydbapp
 
-# Use a minimal base image for the final container
-FROM alpine:latest
-
 # Expose the port your Go application listens on (e.g., 8080)
 EXPOSE 8080
 
