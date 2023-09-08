@@ -13,8 +13,18 @@ RUN go mod download
 # Copy the rest of the project into the container
 COPY . .
 
-# Build the Go application with explicit flags
-RUN go build -o mydbapp
+# Build the Go application with CGO enabled
+RUN CGO_ENABLED=1 GOARCH=amd64 go build -o mydbapp
+
+# Use a minimal base image for the final container
+FROM alpine:latest
+
+# Set the working directory in the final container
+WORKDIR /app
+
+# Copy the built binary from the builder stage
+COPY --from=builder /app/mydbapp .
+
 
 # Expose the port your Go application listens on (e.g., 8080)
 EXPOSE 8080
