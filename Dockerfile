@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go application with explicit flags
-RUN CGO_ENABLED=0 GOARCH=amd64 go build -o myapp
+RUN go build -o myapp
 
 # Use a minimal base image for the final container
 FROM alpine:latest

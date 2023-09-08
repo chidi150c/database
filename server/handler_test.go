@@ -11,7 +11,7 @@ import (
 
 func TestCreateAppData(t *testing.T) {
     // Create a mock WebSocket connection
-    conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:35260/database-services/ws", nil)
+    conn, _, err := websocket.DefaultDialer.Dial("ws://176.58.125.70:8080/database-services/ws", nil)
     if err != nil {
         t.Fatalf("Failed to connect to WebSocket: %v", err)
     }
