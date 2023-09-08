@@ -1,37 +1,22 @@
-# Use the desired Go version
-FROM golang:1.20 AS builder
+# Use an official Golang runtime as a parent image
+FROM golang:1.20.0 AS builder
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy only the necessary Go module files
-COPY go.mod go.sum ./
-
-# Download and cache Go module dependencies
-RUN go mod download
-
-# Copy the rest of the project into the container
+# Copy the Go application source code to the container
 COPY . .
 
-# Build the Go application with CGO enabled
-RUN CGO_ENABLED=1 GOARCH=amd64 go build -o mydbapp
+# Build the Go binary
+RUN go build -o mydbapp
 
-# Use a minimal base image for the final container
-FROM alpine:latest
-
-# Set the working directory in the final container
-WORKDIR /app
-
-# Copy the built binary from the builder stage
-COPY --from=builder /app/mydbapp .
-
-
-# Expose the port your Go application listens on (e.g., 8080)
-EXPOSE 8080
-
-# Define environment variables (if needed)
+# Set the environment variable
 ENV PORT3=8080
 ENV HOSTSITE=https://resoledge.com
 
-# Run your Go application
+
+# Expose the port using the environment variable PORT
+EXPOSE $PORT3
+
+# Command to start your Go application
 CMD ["./mydbapp"]
