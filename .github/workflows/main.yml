@@ -28,7 +28,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key_type: rsa
           script: |
-            set -e
+            set -e 
             echo "Removing old deployment..."
             ssh ${{ secrets.DROPLET_USERNAME }}@${{ secrets.DROPLET_IP }} "cd /tmp/my-app && rm -rf *"
 
