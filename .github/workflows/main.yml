@@ -23,6 +23,7 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           ssh-add - <<<"${{ secrets.SSH_PRIVATE_KEY }}"
+          ssh-add -l  # List loaded keys (for debugging)
 
       - name: Remove Old Deployment in DigitalOcean 
         uses: appleboy/ssh-action@master
