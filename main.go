@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/chidi150c/database/gorm"
+	"github.com/chidi150c/database/policy"
 	"github.com/chidi150c/database/server"
 )
 
