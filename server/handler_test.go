@@ -11,7 +11,7 @@ import (
 
 func TestCreateAppData(t *testing.T) {
     // Create a mock WebSocket connection
-    conn, _, err := websocket.DefaultDialer.Dial("ws://176.58.125.70:8080/database-services/ws", nil)
+    conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:35261/database-services/ws", nil)
     if err != nil {
         t.Fatalf("Failed to connect to WebSocket: %v", err)
     }
@@ -33,7 +33,7 @@ func TestCreateAppData(t *testing.T) {
 
 	// Create a message (request) to send
 	request := map[string]interface{}{
-		"action": "delete",
+		"action": "create",
 		"entity": "app-data",
 		"data":   json.RawMessage(appDataJSON), // RawMessage to keep it as JSON
 	}
@@ -56,7 +56,7 @@ func TestCreateAppData(t *testing.T) {
     if !ok {
         t.Fatalf("Invalid response format %v and resp: %v", ms, response)
     }
-	fmt.Printf("tradrID in uint correct: %v\n", ms)
+	fmt.Printf("tradeID in uint correct: %v\n", ms)
 
     // Add more assertions as needed
 	tradeID := uint(2)

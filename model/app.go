@@ -3,17 +3,17 @@ package model
 import "github.com/jinzhu/gorm"
 
 type AppData struct {
-	gorm.Model
-	DataPoint              int
-	Strategy               string
-	ShortPeriod            int
-	LongPeriod             int
-	ShortEMA               float64
-	LongEMA                float64
-	TargetProfit           float64 
-	TargetStopLoss         float64
-	RiskPositionPercentage float64
-	TotalProfitLoss        float64
+    gorm.Model
+    DataPoint        int `json:"data_point"`
+    Strategy         string  `json:"strategy"`
+    ShortPeriod      int     `json:"short_period"`
+    LongPeriod       int     `json:"long_period"`
+    ShortEMA         float64 `json:"short_ema"`
+    LongEMA          float64 `json:"long_ema"`
+    TargetProfit     float64 `json:"target_profit"`
+    TargetStopLoss   float64 `json:"target_stop_loss"`
+    RiskPositionPercentage float64 `json:"risk_position_percentage"`
+    TotalProfitLoss  float64 `json:"total_profit_loss"`
 }
 
 type TradingSystem struct {
