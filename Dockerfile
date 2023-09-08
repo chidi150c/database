@@ -1,17 +1,20 @@
 # Use the desired Go version
-FROM golang:1.16 AS builder
+FROM golang:1.20 AS builder
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the entire project into the container
+# Copy only the necessary Go module files
+COPY go.mod go.sum ./
+
+# Download and cache Go module dependencies
+RUN go mod download
+
+# Copy the rest of the project into the container
 COPY . .
 
-# Clean the Go build cache
-RUN go clean -cache
-
 # Build the Go application with explicit flags
-RUN CGO_ENABLED=1 GOARCH=amd64 go build -o myapp
+RUN CGO_ENABLED=0 GOARCH=amd64 go build -o myapp
 
 # Use a minimal base image for the final container
 FROM alpine:latest
