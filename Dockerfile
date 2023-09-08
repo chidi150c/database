@@ -19,12 +19,6 @@ RUN go build -o mydbapp
 # Use a minimal base image for the final container
 FROM alpine:latest
 
-# Set the working directory in the final container
-WORKDIR /app
-
-# Copy the built binary from the builder stage
-COPY --from=builder /app/mydbapp .
-
 # Expose the port your Go application listens on (e.g., 8080)
 EXPOSE 8080
 
