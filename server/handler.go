@@ -186,8 +186,6 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
                 // Update the existing trading system fields with new data
                 existingTrade.Symbol = ts.Symbol
 				existingTrade.ClosingPrices = ts.ClosingPrices
-				existingTrade.Container1 = ts.Container1
-				existingTrade.Container2 = ts.Container2
 				existingTrade.Timestamps = ts.Timestamps   
 				existingTrade.Signals = ts.Signals       
 				existingTrade.NextInvestBuYPrice = ts.NextInvestBuYPrice

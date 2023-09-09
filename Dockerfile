@@ -11,7 +11,7 @@ COPY . .
 RUN go build -o mydbapp
 
 # Set the environment variable
-ENV PORT3=8080
+ENV PORT3=35261
 ENV HOSTSITE=https://resoledge.com
 
 

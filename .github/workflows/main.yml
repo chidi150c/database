@@ -71,4 +71,4 @@ jobs:
 
             # Build and run Docker image with encapsulated environment
             docker build -t my-database-app .
-            docker run -d --name my-database-app --network my-network -p 8080:8080 my-database-app
+            docker run -d --name my-database-app --network my-network -p 35261:35261 my-database-app

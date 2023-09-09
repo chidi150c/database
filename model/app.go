@@ -20,8 +20,6 @@ type TradingSystem struct {
 	gorm.Model
 	Symbol                   string
 	ClosingPrices            float64
-	Container1               float64
-	Container2               float64
 	Timestamps               int64
 	Signals                  string
 	NextInvestBuYPrice       float64
