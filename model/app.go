@@ -1,6 +1,41 @@
 package model
 
-import "github.com/jinzhu/gorm"
+import (
+    "database/sql/driver"
+    "encoding/json"
+    "errors"
+	"github.com/jinzhu/gorm"
+)
+
+
+// Float64Slice is a custom data type for a float64 slice.
+type Float64Slice []float64
+
+// Scan scans a value into Float64Slice.
+func (f *Float64Slice) Scan(value interface{}) error {
+    if value == nil {
+        *f = nil
+        return nil
+    }
+
+    byteValue, ok := value.([]byte)
+    if !ok {
+        return errors.New("Invalid Scan Source")
+    }
+
+    return json.Unmarshal(byteValue, f)
+}
+
+// Value converts Float64Slice to a database value.
+func (f Float64Slice) Value() (driver.Value, error) {
+    if f == nil {
+        return nil, nil
+    }
+
+    return json.Marshal(f)
+}
+
+
 
 type AppData struct {
     gorm.Model
@@ -22,24 +57,26 @@ type TradingSystem struct {
 	ClosingPrices            float64
 	Timestamps               int64
 	Signals                  string
-	NextInvestBuYPrice       float64
-	NextProfitSeLLPrice      float64
+	NextInvestBuYPrice       Float64Slice `gorm:"type:json"`
+	NextProfitSeLLPrice      Float64Slice `gorm:"type:json"`
 	CommissionPercentage     float64
 	InitialCapital           float64
 	PositionSize             float64
-	EntryPrice               float64
+	EntryPrice               Float64Slice `gorm:"type:json"`
 	InTrade                  bool
 	QuoteBalance             float64
 	BaseBalance              float64
 	RiskCost                 float64
 	DataPoint                int
 	CurrentPrice             float64
-	EntryQuantity            float64
-	EntryCostLoss            float64
+	EntryQuantity            Float64Slice `gorm:"type:json"`
+	EntryCostLoss            Float64Slice `gorm:"type:json"`
 	TradeCount               int
+	TradingLevel             int       
+	ClosedWinTrades          int      
 	EnableStoploss           bool
 	StopLossTrigered         bool
-	StopLossRecover          float64
+	StopLossRecover          Float64Slice `gorm:"type:json"`
 	RiskFactor               float64
 	MaxDataSize              int
 	RiskProfitLossPercentage float64
