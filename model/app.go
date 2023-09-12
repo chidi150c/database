@@ -35,8 +35,6 @@ type TradingSystem struct {
 	DataPoint                int
 	CurrentPrice             float64
 	EntryQuantity            float64
-	Scalping                 string
-	StrategyCombLogic        string
 	EntryCostLoss            float64
 	TradeCount               int
 	EnableStoploss           bool

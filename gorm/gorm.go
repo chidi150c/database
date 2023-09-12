@@ -81,9 +81,16 @@ func (s *DBServices) CreateTradingSystem(trade *model.TradingSystem) (uint, erro
     return trade.ID, nil
 }
 
-func (s *DBServices) ReadTradingSystem(tradeID uint) (*model.TradingSystem, error) {
+func (s *DBServices) ReadTradingSystem(tradeID uint) (ts *model.TradingSystem, err error) {
     var trade model.TradingSystem
-    if err := s.DB.First(&trade, tradeID).Error; err != nil {
+	if tradeID == 0 {
+        // Fetch the last entry from the database
+        err = s.DB.Order("id DESC").Last(&ts).Error
+        if err != nil {
+            return nil, fmt.Errorf("Error fetching last trading system entry: %v", err)
+        }
+        return ts, nil
+    }else if err = s.DB.First(&trade, tradeID).Error; err != nil {
         return nil, err
     }
     return &trade, nil

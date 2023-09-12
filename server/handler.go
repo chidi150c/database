@@ -201,8 +201,6 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 				existingTrade.DataPoint = ts.DataPoint
 				existingTrade.CurrentPrice = ts.CurrentPrice
 				existingTrade.EntryQuantity = ts.EntryQuantity
-				existingTrade.Scalping = ts.Scalping
-				existingTrade.StrategyCombLogic = ts.StrategyCombLogic
 				existingTrade.EntryCostLoss = ts.EntryCostLoss
 				existingTrade.TradeCount = ts.TradeCount
 				existingTrade.EnableStoploss = ts.EnableStoploss
