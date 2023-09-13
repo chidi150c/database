@@ -25,6 +25,7 @@ func enforceRetentionPolicy(dbs *gorm.DBServices) error {
     // If there are excess records, delete or archive them
     if excessRecords > 0 {
         log.Printf("\nRetention policy exceeded by %d records.\n", excessRecords)
+        log.Printf("\nRetention policy exceeded by %d records, Total records: %d, MaxLimitrecords: %d.\n", excessRecords, totalRecords, maxRecentRecords)
         // Modify this query to select the excess records based on your criteria (e.g., timestamp)
         excessRecordsQuery := dbs.DB.Order("timestamp_column ASC").Limit(excessRecords)
 
@@ -32,6 +33,7 @@ func enforceRetentionPolicy(dbs *gorm.DBServices) error {
         if err := excessRecordsQuery.Delete(&model.TradingSystem{}).Error; err != nil {
             return err
         }
+        log.Printf("\nRetention policy excess deleted successfully!!!.\n")
     }
 
     return nil
@@ -48,7 +50,7 @@ func ScheduleRetentionTask(dbs *gorm.DBServices) {
             log.Printf("Retention policy enforcement error: %v", err)
             // Optionally, you can send alerts or take specific actions on error
         } else {
-            log.Println("Retention policy enforcement successful.")
+            log.Fatal("Retention policy enforcement successful.")
         }
     })
 
