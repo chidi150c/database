@@ -50,7 +50,7 @@ func ScheduleRetentionTask(dbs *gorm.DBServices) {
             log.Printf("Retention policy enforcement error: %v", err)
             // Optionally, you can send alerts or take specific actions on error
         } else {
-            log.Fatal("Retention policy enforcement successful.")
+            log.Printf("Retention policy enforcement successful.")
         }
     })
 
