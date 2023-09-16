@@ -40,12 +40,6 @@ func (a *DBServices) CheckAndCreateTables() error {
 
 	tx := a.DB.Begin()
 
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		tx.Rollback()
-	// 	}
-	// }()
-
 	// Create tables conditionally
 	if !tradingSystemTableExists {
 		if err := tx.AutoMigrate(&model.TradingSystem{}).Error; err != nil {
