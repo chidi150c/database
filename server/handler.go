@@ -101,7 +101,6 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 					writeResponseWithID(msg, ts.ID, conn)
 					continue
 				}
-
 				// Convert standard types to custom data types
 				dbTrade := &model.TradingSystem{
 					Symbol:                   ts.Symbol,
@@ -138,13 +137,12 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 					MinNotional:              ts.MinNotional,
 					StepSize:                 ts.StepSize,
 				}
-
 				// Insert the new trading system into the database
 				tradeID, err := th.DBServices.CreateTradingSystem(dbTrade)
 				if err != nil {
 					msg = fmt.Sprintf("Error creating trading system: %v", err)
 					writeResponseWithID(msg, tradeID, conn)
-					continue
+					return
 				}
 				writeResponseWithID("TradingSystem Created successfully", tradeID, conn)
 			} else if entity == "app-data" {
@@ -184,6 +182,8 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 					writeResponseWithData(msg, &model.TradingSystemData{}, conn)
 					return
 				}
+
+
 				// Convert custom data types to standard types
 				dataTrade := &model.TradingSystemData{
 					Symbol:                   dbTrade.Symbol,
@@ -241,7 +241,7 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 			}
 		} else if action == "update" {
 			if entity == "trading-system" {
-				var ts model.TradingSystem
+				var ts model.TradingSystemData
 				dataByte, _ := json.Marshal(data)
 				// Deserialize the WebSocket message directly into the struct
 				if err := json.Unmarshal(dataByte, &ts); err != nil {
@@ -249,7 +249,6 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 					writeResponseWithID(msg, ts.ID, conn)
 					continue
 				}
-
 				// Fetch the existing trading system from the database based on tradeID
 				existingTrade, err := th.DBServices.ReadTradingSystem(ts.ID)
 				if err != nil {
@@ -259,27 +258,27 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 				}
 				// Update the existing trading system fields with new data
 				existingTrade.Symbol = ts.Symbol
-				existingTrade.ClosingPrices = ts.ClosingPrices
-				existingTrade.Timestamps = ts.Timestamps
-				existingTrade.Signals = ts.Signals
-				existingTrade.NextInvestBuYPrice = ts.NextInvestBuYPrice
-				existingTrade.NextProfitSeLLPrice = ts.NextProfitSeLLPrice
+				existingTrade.ClosingPrices = model.Float64Slice(ts.ClosingPrices)
+				existingTrade.Timestamps = model.Int64Slice(ts.Timestamps)
+				existingTrade.Signals = model.StringSlice(ts.Signals)
+				existingTrade.NextInvestBuYPrice = model.Float64Slice(ts.NextInvestBuYPrice)
+				existingTrade.NextProfitSeLLPrice = model.Float64Slice(ts.NextProfitSeLLPrice)
 				existingTrade.CommissionPercentage = ts.CommissionPercentage
 				existingTrade.InitialCapital = ts.InitialCapital
 				existingTrade.PositionSize = ts.PositionSize
-				existingTrade.EntryPrice = ts.EntryPrice
+				existingTrade.EntryPrice = model.Float64Slice(ts.EntryPrice)
 				existingTrade.InTrade = ts.InTrade
 				existingTrade.QuoteBalance = ts.QuoteBalance
 				existingTrade.BaseBalance = ts.BaseBalance
 				existingTrade.RiskCost = ts.RiskCost
 				existingTrade.DataPoint = ts.DataPoint
 				existingTrade.CurrentPrice = ts.CurrentPrice
-				existingTrade.EntryQuantity = ts.EntryQuantity
-				existingTrade.EntryCostLoss = ts.EntryCostLoss
+				existingTrade.EntryQuantity = model.Float64Slice(ts.EntryQuantity)
+				existingTrade.EntryCostLoss = model.Float64Slice(ts.EntryCostLoss)
 				existingTrade.TradeCount = ts.TradeCount
 				existingTrade.EnableStoploss = ts.EnableStoploss
 				existingTrade.StopLossTrigered = ts.StopLossTrigered
-				existingTrade.StopLossRecover = ts.StopLossRecover
+				existingTrade.StopLossRecover = model.Float64Slice(ts.StopLossRecover)
 				existingTrade.RiskFactor = ts.RiskFactor
 				existingTrade.MaxDataSize = ts.MaxDataSize
 				existingTrade.RiskProfitLossPercentage = ts.RiskProfitLossPercentage
