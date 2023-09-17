@@ -276,6 +276,8 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 				existingTrade.EntryQuantity = model.Float64Slice(ts.EntryQuantity)
 				existingTrade.EntryCostLoss = model.Float64Slice(ts.EntryCostLoss)
 				existingTrade.TradeCount = ts.TradeCount
+				existingTrade.TradingLevel = ts.TradingLevel  
+				existingTrade.ClosedWinTrades = ts.ClosedWinTrades
 				existingTrade.EnableStoploss = ts.EnableStoploss
 				existingTrade.StopLossTrigered = ts.StopLossTrigered
 				existingTrade.StopLossRecover = model.Float64Slice(ts.StopLossRecover)
