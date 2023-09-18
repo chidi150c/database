@@ -343,7 +343,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				return
 			}
 			writeResponseWithID("App data updated successfully", existingAppData.ID, conn)
-		}
+		} 
 	case "delete":
 		if message.Entity == "trading-system" {
 			var ts model.AppData
