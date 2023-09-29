@@ -71,7 +71,7 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 	for {
 		_, p, err := conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
+			log.Print("ConnRDErr")
 			break
 		}
 
@@ -103,7 +103,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &ts); err != nil {
-				msg = fmt.Sprintf("Error parsing WebSocket message: %v", err)
+				msg = fmt.Sprintf("Error3 parsing WebSocket message: %v", err)
 				writeResponseWithID(msg, ts.ID, conn)
 				return
 			}
@@ -157,7 +157,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &appData); err != nil {
-				msg = fmt.Sprintf("Error parsing WebSocket message: %v", err)
+				msg = fmt.Sprintf("Error4 parsing WebSocket message: %v", err)
 				writeResponseWithID(msg, appData.ID, conn)
 				return
 			}
@@ -177,7 +177,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &ts); err != nil {
-				msg = fmt.Sprintf("Error parsing WebSocket message: %v", err)
+				msg = fmt.Sprintf("Error5 parsing WebSocket message: %v", err)
 				writeResponseWithData(msg, ts, conn)
 				return
 			}
@@ -231,7 +231,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &ap); err != nil {
-				msg = fmt.Sprintf("Error parsing WebSocket message: %v", err)
+				msg = fmt.Sprintf("Error2 parsing WebSocket message: %v", err)
 				writeResponseWithData(msg, ap, conn)
 				return
 			}
@@ -250,7 +250,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &ts); err != nil {
-				msg = fmt.Sprintf("Error parsing WebSocket message: %v", err)
+				msg = fmt.Sprintf("Error6 parsing WebSocket message: %v", err)
 				writeResponseWithID(msg, ts.ID, conn)
 				return
 			}
@@ -310,7 +310,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &ap); err != nil {
-				msg = fmt.Sprintf("Error parsing WebSocket message: %v", err)
+				msg = fmt.Sprintf("Error7 parsing WebSocket message: %v", err)
 				writeResponseWithID(msg, ap.ID, conn)
 				return
 			}
@@ -350,7 +350,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &ts); err != nil {
-				msg = fmt.Sprintf("Error parsing WebSocket message: %v", err)
+				msg = fmt.Sprintf("Error8 parsing WebSocket message: %v", err)
 				return
 			}
 			// Delete the trading system from the database based on tradeID
@@ -374,7 +374,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &ap); err != nil {
-				msg = fmt.Sprintf("Error parsing WebSocket message: %v", err)
+				msg = fmt.Sprintf("Error9 parsing WebSocket message: %v", err)
 				return
 			}
 			// Delete the app data from the database based on dataID
@@ -412,16 +412,16 @@ func writeResponseWithID(msg string, id uint, conn *websocket.Conn) {
 	}
 }
 func writeResponseWithData(msg string, data interface{}, conn *websocket.Conn) {
-	// Serialize the AppData object to JSON
-	appDataJSON, err := json.Marshal(data)
+	// Serialize the data object to JSON
+	dataJSON, err := json.Marshal(data)
 	if err != nil {
 		log.Println("Error marshaling Data to JSON:", err)
 		return
 	}
-	// Send the dataID back to the client via the conn
+	// Send the data back to the client via the conn
 	response := map[string]interface{}{
 		"message": msg,
-		"data":    json.RawMessage(appDataJSON),
+		"data":    json.RawMessage(dataJSON),
 	}
 	err = conn.WriteJSON(response)
 	if err != nil {
