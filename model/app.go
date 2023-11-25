@@ -59,7 +59,7 @@ func (i Int64Slice) Value() (driver.Value, error) {
     // Serialize the Int64Slice to a JSON string
     return json.Marshal(i)
 }
-//
+// 
 func (i *Int64Slice) Scan(value interface{}) error {
     // Deserialize the JSON string to an Int64Slice
     if value == nil {
