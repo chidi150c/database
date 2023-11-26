@@ -44,7 +44,7 @@ func ScheduleRetentionTask(dbs *gorm.DBServices) {
     // Create a new cron scheduler
     c := cron.New()
 
-    // Define the schedule for running the retention policy...
+    // Define the schedule for running the retention policy.
     _, err := c.AddFunc("@midnight", func() {
         if err := enforceRetentionPolicy(dbs); err != nil {
             log.Printf("Retention policy enforcement error: %v", err)
