@@ -86,6 +86,7 @@ func (s *DBServices) ReadLastTradingSystem(tradeID uint) (trade *model.TradingSy
 func (s *DBServices) ReadTradingSystem(tradeID uint) (trade *model.TradingSystem, err error) {
     trade = new(model.TradingSystem) // Initialize trade to avoid nil pointer dereference
     if err = s.DB.First(trade, tradeID).Error; err != nil {
+		fmt.Println("Error Reading Ts", err)
         return nil, err
     }
     return trade, nil
