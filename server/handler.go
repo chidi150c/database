@@ -188,7 +188,11 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				msg = fmt.Sprintf("Error retrieving trading system: %v", err)
 				writeResponseWithData(msg, &model.TradingSystemData{}, conn)
 				return
-			}	
+			}else if tradeID != dbTrade.ID{				
+				msg = fmt.Sprintf("Error retrieving trading system: tradeID %d != dbTrade.ID %d %v", tradeID, dbTrade.ID, err)
+				writeResponseWithData(msg, &model.TradingSystemData{}, conn)
+				return
+			}
 			// Convert custom data types to standard types
 			dataTrade := &model.TradingSystemData{
 				Symbol:                   dbTrade.Symbol,
@@ -259,6 +263,11 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			if err != nil {
 				msg = fmt.Sprintf("Error retrieving trading system for update: %v", err)
 				fmt.Printf("Error retrieving trading system %d for update: %v", ts.ID, err)
+				writeResponseWithID(msg, ts.ID, conn)
+				return
+			}else if ts.ID != existingTrade.ID{				
+				msg = fmt.Sprintf("Error retrieving trading system for update: ts.ID %d != existingTrade.ID %d %v", ts.ID, existingTrade.ID, err)
+				fmt.Printf("Error retrieving trading system %d for update: ts.ID %d != existingTrade.ID %d %v", ts.ID, ts.ID, existingTrade.ID, err)
 				writeResponseWithID(msg, ts.ID, conn)
 				return
 			}
