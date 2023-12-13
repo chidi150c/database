@@ -75,21 +75,21 @@ func (s *DBServices) CreateTradingSystem(trade *model.TradingSystem) (uint, erro
     return trade.ID, nil
 }
 
+func (s *DBServices) ReadLastTradingSystem(tradeID uint) (trade *model.TradingSystem, err error) {
+    trade = new(model.TradingSystem) // Initialize trade to avoid nil pointer dereference
+	if err := s.DB.Order("id DESC").First(trade).Error; err != nil {
+		// Handle the error
+		return nil, fmt.Errorf("Error fetching last trading system entry: %v", err)
+	}
+    return trade, nil
+}
 func (s *DBServices) ReadTradingSystem(tradeID uint) (trade *model.TradingSystem, err error) {
     trade = new(model.TradingSystem) // Initialize trade to avoid nil pointer dereference
-    if tradeID == 0 {
-		if err := s.DB.Order("id DESC").First(trade).Error; err != nil {
-			// Handle the error
-			return nil, fmt.Errorf("Error fetching last trading system entry: %v", err)
-		}
-		// Successfully retrieved the last entered TradingSystem record
-		return trade, nil
-	} else if err = s.DB.First(trade, tradeID).Error; err != nil {
+    if err = s.DB.First(trade, tradeID).Error; err != nil {
         return nil, err
     }
     return trade, nil
 }
-
 
 func (s *DBServices) UpdateTradingSystem(trade *model.TradingSystem) error {
     if err := s.DB.Save(trade).Error; err != nil {
