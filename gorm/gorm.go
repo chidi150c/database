@@ -91,12 +91,10 @@ func (s *DBServices) CreateTradingSystem(trade *model.TradingSystem) (uint, erro
 // }
 
 func (s *DBServices) ReadTradingSystem(tradeID uint) (trade *model.TradingSystem, err error) {
-    trade = new(model.TradingSystem) // Initialize trade to avoid nil pointer dereference
-
+    trade = new(model.TradingSystem) // Initialize trade to avoid nil pointer dereference			
     if err = s.DB.First(trade, tradeID).Error; err != nil {
         return nil, fmt.Errorf("Error fetching TradingSystem with ID %d: %v", tradeID, err)
-    }
-
+    }			
     return trade, nil
 }
 

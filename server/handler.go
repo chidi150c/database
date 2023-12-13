@@ -29,13 +29,13 @@ var connections = struct {
 }
 
 type TradeHandler struct {
-	mux        *chi.Mux
+	mux    *chi.Mux
 	DbName string
 }
 
 func NewTradeHandler(dbName string) TradeHandler {
 	h := TradeHandler{
-		mux:        chi.NewRouter(),
+		mux:    chi.NewRouter(),
 		DbName: dbName,
 	}
 	h.mux.Get("/database-services/ws", h.DataBaseSocketHandler)
@@ -90,7 +90,7 @@ func (th *TradeHandler) DataBaseSocketHandler(w http.ResponseWriter, r *http.Req
 func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName string) {
 	msg := ""
 	DBServices, err := gorm.NewDBServices(dbName)
-	if err != nil{
+	if err != nil {
 		log.Printf("Error: while processing Websocket massge: %v", err)
 		return
 	}
@@ -170,7 +170,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				return
 			}
 			writeResponseWithID("AppData Created successfully", dataID, conn)
-		}			
+		}
 	case "read":
 		if message.Entity == "trading-system" {
 			var ts model.TradingSystem
@@ -188,13 +188,14 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				msg = fmt.Sprintf("Error retrieving trading system: %v", err)
 				writeResponseWithData(msg, &model.TradingSystemData{}, conn)
 				return
-			}else if tradeID != dbTrade.ID{				
+			} else if tradeID != dbTrade.ID {
 				msg = fmt.Sprintf("Error retrieving trading system: tradeID %d != dbTrade.ID %d %v", tradeID, dbTrade.ID, err)
 				writeResponseWithData(msg, &model.TradingSystemData{}, conn)
 				return
 			}
 			// Convert custom data types to standard types
 			dataTrade := &model.TradingSystemData{
+				ID:                       dbTrade.ID,
 				Symbol:                   dbTrade.Symbol,
 				ClosingPrices:            []float64(dbTrade.ClosingPrices),
 				Timestamps:               []int64(dbTrade.Timestamps),
@@ -265,7 +266,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				fmt.Printf("Error retrieving trading system %d for update: %v", ts.ID, err)
 				writeResponseWithID(msg, ts.ID, conn)
 				return
-			}else if ts.ID != existingTrade.ID{				
+			} else if ts.ID != existingTrade.ID {
 				msg = fmt.Sprintf("Error retrieving trading system for update: ts.ID %d != existingTrade.ID %d %v", ts.ID, existingTrade.ID, err)
 				fmt.Printf("Error retrieving trading system %d for update: ts.ID %d != existingTrade.ID %d %v", ts.ID, ts.ID, existingTrade.ID, err)
 				writeResponseWithID(msg, ts.ID, conn)
@@ -291,7 +292,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			existingTrade.EntryQuantity = model.Float64Slice(ts.EntryQuantity)
 			existingTrade.EntryCostLoss = model.Float64Slice(ts.EntryCostLoss)
 			existingTrade.TradeCount = ts.TradeCount
-			existingTrade.TradingLevel = ts.TradingLevel  
+			existingTrade.TradingLevel = ts.TradingLevel
 			existingTrade.ClosedWinTrades = ts.ClosedWinTrades
 			existingTrade.EnableStoploss = ts.EnableStoploss
 			existingTrade.StopLossTrigered = ts.StopLossTrigered
@@ -305,7 +306,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			existingTrade.MaxQty = ts.MaxQty
 			existingTrade.MinNotional = ts.MinNotional
 			existingTrade.StepSize = ts.StepSize
-	
+
 			// Save the updated trading system back to the database
 			err = DBServices.UpdateTradingSystem(existingTrade)
 			if err != nil {
@@ -323,7 +324,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				writeResponseWithID(msg, ap.ID, conn)
 				return
 			}
-	
+
 			// Fetch the existing app data from the database based on dataID
 			existingAppData, err := DBServices.ReadAppData(ap.ID)
 			if err != nil {
@@ -331,7 +332,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				writeResponseWithID(msg, ap.ID, conn)
 				return
 			}
-	
+
 			// Update the existing app data fields with new data
 			existingAppData.DataPoint = ap.DataPoint
 			existingAppData.Strategy = ap.Strategy
@@ -343,7 +344,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			existingAppData.TargetStopLoss = ap.TargetStopLoss
 			existingAppData.RiskPositionPercentage = ap.RiskPositionPercentage
 			existingAppData.TotalProfitLoss = ap.TotalProfitLoss
-	
+
 			// Save the updated app data back to the database
 			err = DBServices.UpdateAppData(existingAppData)
 			if err != nil {
@@ -352,7 +353,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				return
 			}
 			writeResponseWithID("App data updated successfully", existingAppData.ID, conn)
-		} 
+		}
 	case "delete":
 		if message.Entity == "trading-system" {
 			var ts model.AppData
