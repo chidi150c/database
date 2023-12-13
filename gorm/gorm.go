@@ -127,14 +127,7 @@ func (s *DBServices) CreateAppData(data *model.AppData) (uint, error) {
 
 func (s *DBServices) ReadAppData(dataID uint) (data *model.AppData, err error) {
     data = new(model.AppData) // Initialize data to avoid nil pointer dereference
-    if dataID == 0 {
-		if err := s.DB.Order("id DESC").First(data).Error; err != nil {
-			// Handle the error
-			return nil, fmt.Errorf("Error fetching last AppData entry: %v", err)
-		}
-		// Successfully retrieved the last entered TradingSystem record
-		return data, nil
-	} else if err := s.DB.First(&data, dataID).Error; err != nil {
+    if err := s.DB.First(&data, dataID).Error; err != nil {
         return nil, err
     }
     return data, nil
