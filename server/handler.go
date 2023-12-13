@@ -255,9 +255,9 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				return
 			}
 			// Fetch the existing trading system from the database based on tradeID
-			fmt.Printf("ts.ID: %d",ts.ID)
+			log.Printf("ts.ID: %d",ts.ID)
 			existingTrade, err := DBServices.ReadTradingSystem(ts.ID)
-			fmt.Printf("ts.ID: %d existingTrade.ID: %d",ts.ID, existingTrade.ID)
+			log.Printf("ts.ID: %d existingTrade.ID: %d",ts.ID, existingTrade.ID)
 			if err != nil {
 				msg = fmt.Sprintf("Error retrieving trading system for update: %v", err)
 				fmt.Printf("Error retrieving trading system %d for update: %v", ts.ID, err)
