@@ -113,7 +113,7 @@ func (s *DBServices) DeleteTradingSystem(tradeID uint) error {
         return err
     }
 	
-    // Run VACUUM to reset auto-incrementing counters
+    // Run VACUUM to reset auto-incrementing counters...
     if err := s.DB.Exec("VACUUM;").Error; err != nil {
         return err
     }
