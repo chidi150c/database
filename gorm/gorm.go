@@ -32,10 +32,7 @@ var _ model.DBServicer = &DBServices{}
 func (a *DBServices) CheckAndCreateTables() error {
 	// Check if the TradingSystem table exists
 	tradingSystemTableExists := tableExists(a.DB, "trading_systems")
-
-	// Check if the AppData table exists
-	appDataTableExists := tableExists(a.DB, "app_data")
-
+	
 	// Start a new transaction
 
 	tx := a.DB.Begin()
@@ -45,13 +42,6 @@ func (a *DBServices) CheckAndCreateTables() error {
 		if err := tx.AutoMigrate(&model.TradingSystem{}).Error; err != nil {
 			tx.Rollback()
 			return fmt.Errorf("Error migrating TradingSystem table: %v", err)
-		}
-	}
-
-	if !appDataTableExists {
-		if err := tx.AutoMigrate(&model.AppData{}).Error; err != nil {
-			tx.Rollback()
-			return fmt.Errorf("Error migrating AppData table: %v", err)
 		}
 	}
 
@@ -75,21 +65,6 @@ func (s *DBServices) CreateTradingSystem(trade *model.TradingSystem) (uint, erro
     return trade.ID, nil
 }
 
-// func (s *DBServices) ReadTradingSystem(tradeID uint) (trade *model.TradingSystem, err error) {
-//     trade = new(model.TradingSystem) // Initialize trade to avoid nil pointer dereference
-//     if tradeID == 0 {
-// 		if err := s.DB.Order("id DESC").First(trade).Error; err != nil {
-// 			// Handle the error
-// 			return nil, fmt.Errorf("Error fetching last trading system entry: %v", err)
-// 		}
-// 		// Successfully retrieved the last entered TradingSystem record
-// 		return trade, nil
-// 	} else if err = s.DB.First(trade, tradeID).Error; err != nil {
-//         return nil, err
-//     }
-//     return trade, nil
-// }
-
 func (s *DBServices) ReadTradingSystem(tradeID uint) (trade *model.TradingSystem, err error) {
     trade = new(model.TradingSystem) // Initialize trade to avoid nil pointer dereference			
     if tradeID == 0 {
@@ -105,7 +80,6 @@ func (s *DBServices) ReadTradingSystem(tradeID uint) (trade *model.TradingSystem
     return trade, nil
 }
 
-
 func (s *DBServices) UpdateTradingSystem(trade *model.TradingSystem) error {
     if err := s.DB.Save(trade).Error; err != nil {
         return err
@@ -120,42 +94,6 @@ func (s *DBServices) DeleteTradingSystem(tradeID uint) error {
  
     // Run VACUUM to reset auto-incrementing counters...
     if err := s.DB.Exec("VACUUM;").Error; err != nil {
-        return err
-    }
-    return nil
-}
-
-func (s *DBServices) CreateAppData(data *model.AppData) (uint, error) {
-    if err := s.DB.Create(data).Error; err != nil {
-        return 0, err
-    }
-    return data.ID, nil
-}
-
-func (s *DBServices) ReadAppData(dataID uint) (data *model.AppData, err error) {
-    data = new(model.AppData) // Initialize data to avoid nil pointer dereference
-    if dataID == 0 {
-		if err := s.DB.Order("id DESC").First(data).Error; err != nil {
-			// Handle the error
-			return nil, fmt.Errorf("Error fetching last AppData entry: %v", err)
-		}
-		// Successfully retrieved the last entered TradingSystem record
-		return data, nil
-	} else if err := s.DB.First(&data, dataID).Error; err != nil {
-        return nil, err
-    }
-    return data, nil
-}
-
-func (s *DBServices) UpdateAppData(data *model.AppData) error {
-    if err := s.DB.Save(data).Error; err != nil {
-        return err
-    }
-    return nil
-}
-
-func (s *DBServices) DeleteAppData(dataID uint) error {
-    if err := s.DB.Delete(&model.AppData{}, dataID).Error; err != nil {
         return err
     }
     return nil

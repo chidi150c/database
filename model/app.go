@@ -71,20 +71,6 @@ func (i *Int64Slice) Scan(value interface{}) error {
     return errors.New("Invalid value type for Int64Slice")
 }
 
-type AppData struct {
-    gorm.Model
-    DataPoint        int `json:"data_point"`
-    Strategy         string  `json:"strategy"`
-    ShortPeriod      int     `json:"short_period"`
-    LongPeriod       int     `json:"long_period"`
-    ShortEMA         float64 `json:"short_ema"`
-    LongEMA          float64 `json:"long_ema"`
-    TargetProfit     float64 `json:"target_profit"`
-    TargetStopLoss   float64 `json:"target_stop_loss"`
-    RiskPositionPercentage float64 `json:"risk_position_percentage"`
-    TotalProfitLoss  float64 `json:"total_profit_loss"`
-}
-
 type TradingSystem struct {
 	gorm.Model
 	Symbol                   string
@@ -120,6 +106,12 @@ type TradingSystem struct {
 	MaxQty                   float64
 	MinNotional              float64
 	StepSize                 float64
+	TargetStopLoss           float64  
+	TargetProfit             float64 
+	TotalProfitLoss          float64   
+	RiskPositionPercentage   float64   
+	ShortPeriod              int       
+	LongPeriod               int       
 }
 
 type DBServicer interface {
@@ -127,10 +119,6 @@ type DBServicer interface {
 	ReadTradingSystem(tradeID uint) (*TradingSystem, error)
 	UpdateTradingSystem(trade *TradingSystem) error
 	DeleteTradingSystem(tradeID uint) error
-	CreateAppData(data *AppData) (dataID uint, err error)
-	ReadAppData(dataID uint) (*AppData, error)
-	UpdateAppData(data *AppData) error
-	DeleteAppData(dataID uint) error
 }
 
 type TradingSystemData struct {
@@ -168,4 +156,10 @@ type TradingSystemData struct {
 	MaxQty                   float64   `json:"max_qty"`
 	MinNotional              float64   `json:"min_notional"`
 	StepSize                 float64   `json:"step_size"`
+	TargetStopLoss           float64   `json:"target_stop_loss"`
+	TargetProfit             float64   `json:"target_profit"`
+	TotalProfitLoss          float64   `json:"total_profit_loss"`
+	RiskPositionPercentage   float64   `json:"risk_position_percentage"`
+	ShortPeriod              int       `json:"short_period"`
+	LongPeriod               int       `json:"long_period"`
 }

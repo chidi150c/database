@@ -142,6 +142,12 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				MaxQty:                   ts.MaxQty,
 				MinNotional:              ts.MinNotional,
 				StepSize:                 ts.StepSize,
+				TargetStopLoss:           ts.TargetStopLoss,
+				TargetProfit:             ts.TargetProfit,
+				TotalProfitLoss:          ts.TotalProfitLoss,
+				RiskPositionPercentage:   ts.RiskPositionPercentage,
+				ShortPeriod:              ts.ShortPeriod,
+				LongPeriod:               ts.LongPeriod,
 			}
 			// Insert the new trading system into the database
 			tradeID, err := DBServices.CreateTradingSystem(dbTrade)
@@ -151,25 +157,6 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				return
 			}
 			writeResponseWithID("TradingSystem Created successfully", tradeID, conn)
-		} else if message.Entity == "app-data" {
-			// Parse and process app data creation
-			var appData model.AppData
-			dataByte, _ := json.Marshal(message.Data)
-			// Deserialize the WebSocket message directly into the struct
-			if err := json.Unmarshal(dataByte, &appData); err != nil {
-				msg = fmt.Sprintf("Error4 parsing WebSocket message: %v", err)
-				writeResponseWithID(msg, appData.ID, conn)
-				return
-			}
-
-			// Insert the new app data into the database
-			dataID, err := DBServices.CreateAppData(&appData)
-			if err != nil {
-				msg = fmt.Sprintf("Error creating app data: %v", err)
-				writeResponseWithID(msg, dataID, conn)
-				return
-			}
-			writeResponseWithID("AppData Created successfully", dataID, conn)
 		}
 	case "read":
 		if message.Entity == "trading-system" {
@@ -188,7 +175,7 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				msg = fmt.Sprintf("Error retrieving trading system: %v", err)
 				writeResponseWithData(msg, &model.TradingSystemData{}, conn)
 				return
-			} 
+			}
 			// Convert custom data types to standard types
 			dataTrade := &model.TradingSystemData{
 				ID:                       dbTrade.ID,
@@ -225,25 +212,14 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				MaxQty:                   dbTrade.MaxQty,
 				MinNotional:              dbTrade.MinNotional,
 				StepSize:                 dbTrade.StepSize,
+				TargetStopLoss:           dbTrade.TargetStopLoss,
+				TargetProfit:             dbTrade.TargetProfit,
+				TotalProfitLoss:          dbTrade.TotalProfitLoss,
+				RiskPositionPercentage:   dbTrade.RiskPositionPercentage,
+				ShortPeriod:              dbTrade.ShortPeriod,
+				LongPeriod:               dbTrade.LongPeriod,
 			}
 			writeResponseWithData("TradingSystem Read successfully", dataTrade, conn)
-		} else if message.Entity == "app-data" {
-			var ap model.AppData
-			dataByte, _ := json.Marshal(message.Data)
-			// Deserialize the WebSocket message directly into the struct
-			if err := json.Unmarshal(dataByte, &ap); err != nil {
-				msg = fmt.Sprintf("Error2 parsing WebSocket message: %v", err)
-				writeResponseWithData(msg, ap, conn)
-				return
-			}
-			// Fetch the app data from the database based on dataID
-			appData, err := DBServices.ReadAppData(ap.ID)
-			if err != nil {
-				msg = fmt.Sprintf("Error retrieving app data: %v", err)
-				writeResponseWithData(msg, appData, conn)
-				return
-			}
-			writeResponseWithData("AppData Read successfully", appData, conn)
 		}
 	case "update":
 		if message.Entity == "trading-system" {
@@ -302,6 +278,12 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			existingTrade.MaxQty = ts.MaxQty
 			existingTrade.MinNotional = ts.MinNotional
 			existingTrade.StepSize = ts.StepSize
+			existingTrade.TargetStopLoss = ts.TargetStopLoss
+			existingTrade.TargetProfit = ts.TargetProfit
+			existingTrade.TotalProfitLoss = ts.TotalProfitLoss
+			existingTrade.RiskPositionPercentage = ts.RiskPositionPercentage
+			existingTrade.ShortPeriod = ts.ShortPeriod
+			existingTrade.LongPeriod = ts.LongPeriod
 
 			// Save the updated trading system back to the database
 			err = DBServices.UpdateTradingSystem(existingTrade)
@@ -311,48 +293,10 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 				return
 			}
 			writeResponseWithID("Trading system updated successfully", existingTrade.ID, conn)
-		} else if message.Entity == "app-data" {
-			var ap model.AppData
-			dataByte, _ := json.Marshal(message.Data)
-			// Deserialize the WebSocket message directly into the struct
-			if err := json.Unmarshal(dataByte, &ap); err != nil {
-				msg = fmt.Sprintf("Error7 parsing WebSocket message: %v", err)
-				writeResponseWithID(msg, ap.ID, conn)
-				return
-			}
-
-			// Fetch the existing app data from the database based on dataID
-			existingAppData, err := DBServices.ReadAppData(ap.ID)
-			if err != nil {
-				msg = fmt.Sprintf("Error retrieving app data for update: %v", err)
-				writeResponseWithID(msg, ap.ID, conn)
-				return
-			}
-
-			// Update the existing app data fields with new data
-			existingAppData.DataPoint = ap.DataPoint
-			existingAppData.Strategy = ap.Strategy
-			existingAppData.ShortPeriod = ap.ShortPeriod
-			existingAppData.LongPeriod = ap.LongPeriod
-			existingAppData.ShortEMA = ap.ShortEMA
-			existingAppData.LongEMA = ap.LongEMA
-			existingAppData.TargetProfit = ap.TargetProfit
-			existingAppData.TargetStopLoss = ap.TargetStopLoss
-			existingAppData.RiskPositionPercentage = ap.RiskPositionPercentage
-			existingAppData.TotalProfitLoss = ap.TotalProfitLoss
-
-			// Save the updated app data back to the database
-			err = DBServices.UpdateAppData(existingAppData)
-			if err != nil {
-				msg = fmt.Sprintf("Error updating app data: %v", err)
-				writeResponseWithID(msg, existingAppData.ID, conn)
-				return
-			}
-			writeResponseWithID("App data updated successfully", existingAppData.ID, conn)
 		}
 	case "delete":
 		if message.Entity == "trading-system" {
-			var ts model.AppData
+			var ts model.TradingSystemData
 			dataByte, _ := json.Marshal(message.Data)
 			// Deserialize the WebSocket message directly into the struct
 			if err := json.Unmarshal(dataByte, &ts); err != nil {
@@ -369,30 +313,6 @@ func processMessage(conn *websocket.Conn, message WebSocketMessage, dbName strin
 			response := map[string]interface{}{
 				"message": "Trading system deleted successfully",
 				"data_id": ts.ID,
-			}
-			err = conn.WriteJSON(response)
-			if err != nil {
-				msg = fmt.Sprintf("Error sending response via WebSocket: %v", err)
-				return
-			}
-		} else if message.Entity == "app-data" {
-			var ap model.AppData
-			dataByte, _ := json.Marshal(message.Data)
-			// Deserialize the WebSocket message directly into the struct
-			if err := json.Unmarshal(dataByte, &ap); err != nil {
-				msg = fmt.Sprintf("Error9 parsing WebSocket message: %v", err)
-				return
-			}
-			// Delete the app data from the database based on dataID
-			err := DBServices.DeleteAppData(ap.ID)
-			if err != nil {
-				msg = fmt.Sprintf("Error deleting app data: %v", err)
-				return
-			}
-			// Send a success response back to the client via the conn
-			response := map[string]interface{}{
-				"message": "App data deleted successfully",
-				"data_id": ap.ID,
 			}
 			err = conn.WriteJSON(response)
 			if err != nil {
